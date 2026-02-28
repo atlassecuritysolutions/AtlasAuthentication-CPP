@@ -55,3 +55,33 @@ int main() {
 ```
 
 Windows x64 · Release · no external dependencies
+
+---
+
+## Legal Notice
+
+© 2025–2026 Atlas Security Solutions. All rights reserved.
+
+This SDK exists for one purpose: to let developers integrate Atlas Authentication into their software. If you are a developer building an application and using this code to license and protect it through Atlas — you are exactly who this is for. Use it freely.
+
+**The following acts are strictly prohibited without explicit written authorization from the owner, and apply to those who seek to abuse, steal from, or undermine the Atlas platform:**
+
+- Reverse engineering, decompiling, disassembling, or reconstructing the Atlas platform, its compiled binaries, network protocols, or server infrastructure
+- Tampering with, bypassing, disabling, or circumventing any authentication check, anti-tamper control, or security mechanism within the Atlas system
+- Accessing, probing, or interfering with Atlas servers, databases, or infrastructure without authorization
+- Using knowledge of Atlas internals to build, assist, or contribute to competing platforms or security bypass tools
+
+**Applicable Law & Enforcement:**
+
+These acts constitute criminal and civil offenses enforceable under:
+
+- **Saudi Arabia:** Anti-Cybercrime Law (Royal Decree No. M/17, 1428H) — Articles 3 and 4
+- **United States:** Computer Fraud and Abuse Act (18 U.S.C. § 1030)
+- **European Union:** Directive 2013/40/EU on Attacks Against Information Systems — binding across all EU member states
+- **International:** WIPO Copyright Treaty and the TRIPS Agreement — enforceable across 180+ signatory nations
+
+These instruments collectively provide jurisdiction and enforcement mechanisms across all major territories worldwide.
+
+Atlas Security Solutions actively monitors for unauthorized access, reverse engineering attempts, and protocol analysis. Any violation will be met with immediate civil action, referral to the competent national authorities in the relevant jurisdiction, and pursuit of all available legal remedies — including injunctive relief, asset recovery, and cross-border enforcement — without prior notice or warning.
+
+For permission requests or legal inquiries: [mail@atlassecurity.site](mailto:mail@atlassecurity.site) · [atlassecurity.site/legal](https://atlassecurity.site/legal)
