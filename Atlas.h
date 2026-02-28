@@ -16,7 +16,7 @@ namespace Atlas {
     // CONFIGURATION - Set your API key here
     // ========================================================================
     // Get your API key from atlassecurity.site/dashboard after creating an application
-    inline std::string API_KEY = "FFKGjSUCTWhVXz8nxoHZyDL2GwMDqMV7M4gcJbx00AFmNwORndM9diF6unYgp7bQ";
+    inline std::string API_KEY = "YOUR_API_KEY_HERE";
 
     // ========================================================================
     // CORE AUTHENTICATION FUNCTIONS
