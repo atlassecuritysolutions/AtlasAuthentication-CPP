@@ -1,6 +1,6 @@
 # Atlas Authentication — C++ SDK Example
 
-**Website** · [atlassecurity.site](https://atlassecurity.site) &nbsp;|&nbsp; **Docs** · [atlassecurity.site/docs](https://atlassecurity.site/docs) &nbsp;|&nbsp; **Plans** · [atlassecurity.site/plans](https://atlassecurity.site/plans) &nbsp;|&nbsp; **Discord** · &nbsp;|&nbsp; **GitHub** ·
+**Website** · [atlassecurity.site](https://atlassecurity.site) &nbsp;|&nbsp; **Docs** · [atlassecurity.site/docs](https://atlassecurity.site/docs) &nbsp;|&nbsp; **Plans** · [atlassecurity.site/plans](https://atlassecurity.site/plans) &nbsp;|&nbsp; **Discord** · [discord.gg/EG5dmpFaCF](https://discord.gg/EG5dmpFaCF) &nbsp;|&nbsp; **GitHub** · [atlassecuritysolutions](https://github.com/atlassecuritysolutions) &nbsp;|&nbsp; **Email** · [mail@atlassecurity.site](mailto:mail@atlassecurity.site)
 
 ---
 
