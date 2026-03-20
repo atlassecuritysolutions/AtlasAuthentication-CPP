@@ -47,7 +47,7 @@ int main()
     // Send a custom log message — appears in your dashboard Logs tab
     Atlas::Network::SubmitLog("User successfully completed example");
 
-    // Download a file uploaded via the Atlas Panel
+    // Download a file uploaded via the Atlas Dashboard, this usage example also writes it to disk!
     //auto fileData = Atlas::Network::Download(1);
     //if (!fileData.empty()) {
     //    std::ofstream file("downloaded_file.bin", std::ios::binary);
