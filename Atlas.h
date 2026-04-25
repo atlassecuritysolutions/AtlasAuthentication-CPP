@@ -4,7 +4,7 @@
 #include <cstdint>
 
 // ============================================================================
-// ATLAS AUTHENTICATION LIBRARY - API REFERENCE
+// ATLAS AUTHENTICATION LIBRARY - API REFERENCE TEST
 // ============================================================================
 // This header provides all the functions you need to integrate Atlas Auth
 // into your application. See the example below for usage.
