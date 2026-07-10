@@ -26,19 +26,32 @@ Prompts for a license key, connects to the Atlas server, and on success prints t
 
 ---
 
-## Dashboard — Bans
+## What Atlas is
 
-[![Ban management](https://atlassecurity.site/readme-bans.png)](https://atlassecurity.site)
+Atlas is a **hardware-bound license authentication and software protection platform** built specifically for C++ applications. It is not a license key validator — it is an active protection system that runs throughout the session.
 
-Bans issued from the dashboard lock by license key, HWID, IP, and up to 16+ hardware component hashes simultaneously. The notification confirms the ban was recorded against all hardware components. Active immediately — Simply enter a value, server finds matching details from IP's, licenses, HWID's, and even individual identifiers, and bans all in a cascade.
+**What makes it different from every other C++ auth system:**
 
----
+Every 5 seconds after login: executable CRC verified, import table checked, network functions scanned, watchdog threads cross-checking each other. If anything deviates from the startup snapshot — NOP patch, injected DLL, debugger attached, memory edited — the process terminates via `__fastfail()`. No dialog. No recovery path. The kernel terminates it directly.
 
-## Dashboard — Logs & Analytics
+**The authentication stack, in order:**
 
-[![Connection logs and analytics](https://atlassecurity.site/readme-analytics.png)](https://atlassecurity.site)
+1. **Proof-of-work gate** — ~50ms for real users, hours for bots. Applied before any auth logic runs.
+2. **Executable hash check** — your binary's SHA-256 must match the whitelist registered in the dashboard. Modified builds are rejected at the door.
+3. **Hardware fingerprint** — 16+ components across firmware, storage, NIC, and platform security. The fingerprint is a keyed hash; it cannot be reconstructed without the server secret.
+4. **License validation** — expiry, level, HWID binding, concurrent session limit, IP and country restrictions — all checked server-side in a single round trip.
+5. **Ban vector check** — license key ban, full HWID ban, per-component ban (NIC, firmware, volume serial independently), and IP ban — applied in parallel.
+6. **HMAC-signed response** — every successful auth response carries a keyed HMAC over the nonce, license key, and session ID. A nulled server cannot forge a valid reply.
+7. **Session negotiation** — auth token fragmented across 4 non-adjacent memory pages with compile-time salt. Token rotates every heartbeat.
 
-Every event is logged with timestamp, type, license, IP, location, device, and HWID. Admin actions — session termination, messages sent — appear inline. The analytics tab shows auth response time, server load, uptime, and a live geographic heatmap of active connections.
+**The live enforcement stack (every 5 seconds after login):**
+
+- Code section CRC against startup snapshot — catches all in-memory patches
+- Import Address Table integrity check — catches hook injection and manual mapping
+- Network function hook scan — WinSock/WinHTTP hook detection before any heartbeat data leaves
+- Injection detection — unexpected loaded modules trigger immediate exit
+- Hardware debug register check — `DR0–DR7` inspected before every sensitive fetch
+- Watchdog mutual liveness — two threads cross-check each other; if either dies, both processes exit via `__fastfail()`
 
 ---
 
@@ -54,7 +67,56 @@ int main() {
 }
 ```
 
-Windows x64 · Release · no external dependencies
+**`Atlas::Startup()`** — initializes crypto primitives, snapshots the executable pages (baseline for CRC verification), starts the mutual watchdog threads, resolves all API imports via PEB walking and hash-based export matching. No readable import strings remain after this call.
+
+**`Atlas::Login(key)`** — sends the license key through the encrypted transport (per-request key derivation, HMAC-signed), validates against the server, binds the hardware fingerprint, stores the session token across 4 non-adjacent memory fragments, and starts the heartbeat loop. Everything else — integrity checks, anti-debug, remote kill handling — runs automatically from this point.
+
+That is the entire integration. Windows x64 · Release · no external dependencies.
+
+---
+
+## Dashboard — Bans
+
+[![Ban management](https://atlassecurity.site/readme-bans.png)](https://atlassecurity.site)
+
+Bans issued from the dashboard lock by license key, HWID, IP, and up to 16+ hardware component hashes simultaneously. The notification confirms the ban was recorded against all hardware components. Active immediately — Simply enter a value, server finds matching details from IP's, licenses, HWID's, and even individual identifiers, and bans all in a cascade.
+
+**Ban vectors (applied independently):**
+- **License key** — key invalidated server-side, rejected at next heartbeat
+- **Full HWID** — the combined fingerprint hash is banned
+- **Per-component** — ban an individual NIC MAC, firmware UUID, or volume serial; the user cannot spoof just that component without shifting the full fingerprint
+- **IP address** — global across all your applications
+- **Deep ban** — flags all known fingerprint variants associated with the user
+
+All bans propagate within one heartbeat cycle (≤5 seconds of the user's next check-in).
+
+---
+
+## Dashboard — Logs & Analytics
+
+[![Connection logs and analytics](https://atlassecurity.site/readme-analytics.png)](https://atlassecurity.site)
+
+Every event is logged with timestamp, type, license, IP, location, device, and HWID. Admin actions — session termination, messages sent — appear inline. The analytics tab shows auth response time, server load, uptime, and a live geographic heatmap of active connections.
+
+**Log fields per entry:** timestamp · event type · license key · IP address · geolocation · device name · HWID hash · result · latency
+
+**Filter by:** result (ALLOW / DENY / BAN) · license key · IP address · date range
+
+---
+
+## Server architecture
+
+The Atlas backend is a **128-worker C++ TCP server** with a 16-shard session map and a 16-connection PostgreSQL pool.
+
+- All application data (licenses, bans, hardware serials, session state) is cached in memory with microsecond invalidation on ban
+- Session map is sharded — no global lock on concurrent auth requests
+- Stat increments are batched and flushed to the database every 60 seconds, not on the hot path
+- Log writes are async — zero I/O latency impact on auth response time
+- Auth response time under load: **≤50ms**
+
+---
+
+**Premium starts at $19/month.** Monthly ($19), 6-month ($69, save 39%), annual ($99, save 57%). PayPal and crypto. Instant activation. [See plans →](https://atlassecurity.site/plans)
 
 ---
 
@@ -64,7 +126,7 @@ Windows x64 · Release · no external dependencies
 
 This SDK exists for one purpose: to let developers integrate Atlas Authentication into their software. If you are a developer building an application and using this code to license and protect it through Atlas — you are exactly who this is for. Use it freely.
 
-**The following acts are strictly prohibited without explicit written authorization from the owner, and apply to those who seek to abuse, steal from, or undermine the Atlas platform:**
+**The following acts are strictly prohibited without explicit written authorization from the owner, and apply to those who seek to abuse, exploit or undermine the Atlas platform, Atlas reserves all rights to pursue legal action:**
 
 - Reverse engineering, decompiling, disassembling, or reconstructing the Atlas platform, its compiled binaries, network protocols, or server infrastructure
 - Tampering with, bypassing, disabling, or circumventing any authentication check, anti-tamper control, or security mechanism within the Atlas system
@@ -82,6 +144,6 @@ These acts constitute criminal and civil offenses enforceable under:
 
 These instruments collectively provide jurisdiction and enforcement mechanisms across all major territories worldwide.
 
-Atlas Security Solutions actively monitors for unauthorized access, reverse engineering attempts, and protocol analysis. Any violation will be met with immediate civil action, referral to the competent national authorities in the relevant jurisdiction, and pursuit of all available legal remedies — including injunctive relief, asset recovery, and cross-border enforcement — without prior notice or warning.
+Atlas Security Solutions actively monitors for unauthorized access, reverse engineering attempts, and protocol analysis. Any violation will be met with immediate civil action, referral to the competent national authorities in the relevant jurisdiction, and pursuit of all available legal remedies — including injunctive relief, asset recovery, and cross-jurisdiction enforcement — without any prior notice or warning.
 
 For permission requests or legal inquiries: [mail@atlassecurity.site](mailto:mail@atlassecurity.site) · [atlassecurity.site/legal](https://atlassecurity.site/legal)
