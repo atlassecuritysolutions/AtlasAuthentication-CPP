@@ -1,0 +1,10 @@
+*.suo
+*.user
+*.vcxproj.user
+.vs/
+x64/
+Debug/
+Release/
+DLL-Debug/
+DLL-Release/
+Ship-All/

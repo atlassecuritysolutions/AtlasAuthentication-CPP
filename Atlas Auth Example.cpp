@@ -35,19 +35,19 @@ int main()
 
     // Access user data after successful authentication
     std::cout << "\n--- User Information ---" << std::endl;
-    std::cout << "License: "      << Atlas::Data::GetLicense()         << std::endl;
-    std::cout << "Expiry: "       << Atlas::Data::GetExpiry()          << std::endl;
-    std::cout << "IP: "           << Atlas::Data::GetIP()              << std::endl;
-    std::cout << "HWID: "         << Atlas::Data::GetHWID()            << std::endl;
-    std::cout << "Level: "        << Atlas::Data::GetLevel()           << std::endl;
-    std::cout << "Note: "         << Atlas::Data::GetNote()            << std::endl;
+    std::cout << "License: " << Atlas::Data::GetLicense() << std::endl;
+    std::cout << "Expiry: " << Atlas::Data::GetExpiry() << std::endl;
+    std::cout << "IP: " << Atlas::Data::GetIP() << std::endl;
+    std::cout << "HWID: " << Atlas::Data::GetHWID() << std::endl;
+    std::cout << "Level: " << Atlas::Data::GetLevel() << std::endl;
+    std::cout << "Note: " << Atlas::Data::GetNote() << std::endl;
     std::cout << "Active Users: " << Atlas::Data::GetActiveUserCount() << std::endl;
-    std::cout << "Total Users: "  << Atlas::Data::GetUserCount()       << std::endl;
+    std::cout << "Total Users: " << Atlas::Data::GetUserCount() << std::endl;
 
     // Send a custom log message — appears in your dashboard Logs tab
-    Atlas::Network::SubmitLog("User successfully completed example");
+    Atlas::Network::SubmitLog("User successfully completed the example");
 
-    // Download a file uploaded via the Atlas Dashboard, this usage example also writes it to disk!
+    // Download a file uploaded via the Atlas Panel
     //auto fileData = Atlas::Network::Download(1);
     //if (!fileData.empty()) {
     //    std::ofstream file("downloaded_file.bin", std::ios::binary);

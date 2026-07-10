@@ -4,7 +4,7 @@
 #include <cstdint>
 
 // ============================================================================
-// ATLAS AUTHENTICATION LIBRARY - API REFERENCE TEST
+// ATLAS AUTHENTICATION LIBRARY - API REFERENCE
 // ============================================================================
 // This header provides all the functions you need to integrate Atlas Auth
 // into your application. See the example below for usage.
@@ -16,17 +16,16 @@ namespace Atlas {
     // CONFIGURATION - Set your API key here
     // ========================================================================
     // Get your API key from atlassecurity.site/dashboard after creating an application
-    inline std::string API_KEY = "YOUR_API_KEY_HERE";
+    inline std::string API_KEY = "NBg3orSbSmyMLqMathTbXJ1J1xiLlv0SIGAwSDB20THVMEH2GJkF1xXwUSoo82Kl";
 
     // ========================================================================
     // CORE AUTHENTICATION FUNCTIONS
     // ========================================================================
 
-    // Initialize the authentication system (call once at program start)
+    // Initialize the authentication system (call once at top of program start or main)
     void Startup();
 
-    // Authenticate a user with their license key
-    // Returns true if authentication succeeds, false otherwise
+    // Authenticate a user with their license key, returns true on success, false otherwise
     bool Login(const std::string& license_key);
 
     // Logout and terminate the current session and clear authentication state
@@ -50,7 +49,7 @@ namespace Atlas {
         // duration_minutes: Ban duration in minutes (0 = permanent)
         bool BanUser(const std::string& ban_reason, int duration_minutes);
 
-        // Submit a custom log entry to the server (max 512 characters)
+        // Submit a custom log entry to appear in your applications logs (max 512 characters)
         bool SubmitLog(const char* log_text);
     }
 
@@ -58,7 +57,7 @@ namespace Atlas {
     // DATA - User Information and Statistics
     // ========================================================================
     namespace Data {
-        // User license information (set in database after login)
+        // User license information (available in dataset after login)
         std::string GetLicense();               // License key used during login
         std::string GetIP();                    // IP address detected by server
         std::string GetHWID();                  // Hardware ID for device binding
@@ -80,7 +79,7 @@ namespace Atlas {
         // License expiry helpers
         int GetDaysRemaining();                 // Days until expiry (-1 if lifetime, 0 if expired)
         bool IsLifetime();                      // True if license never expires
-        bool IsExpiringSoon(int days_threshold = 7); // True if expiring within threshold
+        bool IsExpiringSoon(int days_threshold = 7); // True if expiring within threshold, set value as you wish
 
         // Authentication status
         bool IsAuthenticated();                 // True if logged in and session active
@@ -94,7 +93,7 @@ namespace Atlas {
     // VARIABLES - Server-Side Configuration
     // ========================================================================
     namespace Variables {
-        // Fetch server-side variables (set through Atlas Panel dashboard)
+        // Fetch server-side variables (set through Atlas dashboard)
         std::string Fetch(const std::string& key);   // Get text value (empty if not found)
         bool FetchBool(const std::string& key);      // Get boolean ("true"/"1"/"yes" = true)
         int FetchInt(const std::string& key);        // Get integer (0 if not found/invalid)
@@ -104,6 +103,8 @@ namespace Atlas {
     // HELPER - Utility Functions
     // ========================================================================
     namespace Helper {
+        // NOTICE: All these functions are unrelated to Atlas!
+        
         // Send Discord webhook message
         bool SendDiscord(const std::string& webhook_url, const std::string& message);
 
@@ -114,7 +115,7 @@ namespace Atlas {
         // Send custom HTTP webhook with JSON payload (Slack, custom endpoints, etc.)
         bool SendWebhook(const std::string& url, const std::string& json_payload);
 
-        // Force exit the application immediately (secure, untamperable termination)
+        // Force exit the application process (100% secure & untamperable termination)
         void Exit();
 
         // Lightweight connectivity check — returns round-trip time in milliseconds, -1 if unreachable
