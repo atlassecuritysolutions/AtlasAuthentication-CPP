@@ -11,7 +11,7 @@
 // brand-on-right, filled circle bullets drawn on the draw list. No asterisks,
 // no default ImGui bitmap font, no drop-shadows.
 //
-// Set your API key in ../shared/Atlas.h  (Atlas::API_KEY inline std::string).
+// Set your API key in ../Atlas SDK/Atlas.h  (Atlas::API_KEY inline std::string).
 // ============================================================================
 
 #include "imgui.h"
@@ -20,6 +20,7 @@
 #include <d3d11.h>
 #include <tchar.h>
 #include <string>
+#include <vector>
 #include <shellapi.h>
 
 #include "Atlas.h"
@@ -66,14 +67,29 @@ void CleanupRenderTarget();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // ── App state ────────────────────────────────────────────────────────────
-enum class Screen { Login, Welcome };
-static Screen  g_screen = Screen::Login;
-static char    g_licenseBuf[128] = "";
+enum class Screen   { Login, Welcome };
+// Auth mode segments on the Login screen — matches the Console example so
+// users can test every path Atlas supports from any of the four examples.
+enum class AuthMode { License, User, Register };
+static Screen   g_screen  = Screen::Login;
+static AuthMode g_mode    = AuthMode::License;
+static char     g_licenseBuf [128] = "";
+static char     g_usernameBuf[96]  = "";
+static char     g_passwordBuf[136] = "";
+static char     g_regLicBuf  [128] = "";
+static char     g_regUserBuf [96]  = "";
+static char     g_regPassBuf [136] = "";
+// Change-password state (Welcome screen — only shown for user-mode sessions)
+static bool     g_showChangePw = false;
+static char     g_oldPwBuf[136] = "";
+static char     g_newPwBuf[136] = "";
+static std::string g_pwStatus; // banner under the change-password form
 static std::string g_errorMsg;
 static ULONGLONG g_sessionStart = 0;
 
 struct WelcomeInfo {
-    std::string license, level, expiry, hwid, ip, note, active, total;
+    std::string license, username, expiry, hwid, ip, note, active, total;
+    int level = 0;
 } g_info;
 
 // ── Style + fonts ────────────────────────────────────────────────────────
@@ -221,16 +237,18 @@ static void Hyperlink(const char* label, const char* url) {
     }
 }
 
-// Fetch user info after successful login
-static void FetchWelcomeInfo(const char* licenseInput) {
-    g_info.license = licenseInput;
-    g_info.level   = Atlas::Data::GetLevel();
-    g_info.expiry  = Atlas::Data::GetExpiry();
-    g_info.hwid    = Atlas::Data::GetHWID();
-    g_info.ip      = Atlas::Data::GetIP();
-    g_info.note    = Atlas::Data::GetNote();
-    g_info.active  = Atlas::Data::GetActiveUserCount();
-    g_info.total   = Atlas::Data::GetUserCount();
+// Fetch user info after successful login. Works for every auth mode — the SDK
+// resolves the license/username itself; passing a hint is optional.
+static void FetchWelcomeInfo() {
+    g_info.license  = Atlas::Data::GetLicense();
+    g_info.username = Atlas::Data::GetUsername();
+    g_info.level    = Atlas::Data::GetLevel();   // int
+    g_info.expiry   = Atlas::Data::GetExpiry();
+    g_info.hwid     = Atlas::Data::GetHWID();
+    g_info.ip       = Atlas::Data::GetIP();
+    g_info.note     = Atlas::Data::GetNote();
+    g_info.active   = Atlas::Data::GetActiveUserCount();
+    g_info.total    = Atlas::Data::GetUserCount();
 }
 
 // ── The Atlas UI - split-panel form-on-left brand-on-right ───────────────
@@ -270,43 +288,108 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
 
         if (g_screen == Screen::Login) {
             ImGui::PushFont(g_FontHeading);
-            TextC(COL_HI, "Sign in");
+            TextC(COL_HI, g_mode == AuthMode::Register ? "Create an account" : "Sign in");
             ImGui::PopFont();
 
             ImGui::Dummy(ImVec2(0, 6));
             ImGui::PushTextWrapPos(formW);
-            TextWrappedC(COL_LO, "Your license is checked against the Atlas server, tied to this machine's hardware, and re-verified every five seconds while the program runs.");
+            TextWrappedC(COL_LO, g_mode == AuthMode::Register
+                ? "Bind a license key to a new username/password. On success you'll be signed in as the new account automatically."
+                : g_mode == AuthMode::User
+                ? "Sign in with the username and password you registered earlier (or that was provisioned in the dashboard)."
+                : "Your license is checked against the Atlas server, tied to this machine's hardware, and re-verified every five seconds while the program runs.");
             ImGui::PopTextWrapPos();
 
-            ImGui::Dummy(ImVec2(0, 28));
-            ImGui::PushFont(g_FontEyebrow);
-            TextC(COL_FAINT, "LICENSE KEY");
-            ImGui::PopFont();
-            ImGui::Dummy(ImVec2(0, 4));
+            // ── Mode picker — 3 pill buttons acting as a segmented control ────
+            ImGui::Dummy(ImVec2(0, 20));
+            const float segW = (formW - 12.f) / 3.f;
+            const char* segLabels[3] = { "License key", "User login", "Register" };
+            AuthMode segModes[3] = { AuthMode::License, AuthMode::User, AuthMode::Register };
+            for (int i = 0; i < 3; i++) {
+                if (i > 0) ImGui::SameLine(0, 6);
+                bool on = g_mode == segModes[i];
+                ImGui::PushStyleColor(ImGuiCol_Button,        on ? COL_SIGNAL   : COL_RAISED);
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, on ? COL_SIGNAL_HI : COL_RAISED_HI);
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive,  on ? COL_SIGNAL_HI : COL_RAISED_HI);
+                ImGui::PushStyleColor(ImGuiCol_Text,          on ? COL_INK       : COL_LO);
+                ImGui::PushFont(on ? g_FontBodyBold : g_FontBody);
+                if (ImGui::Button(segLabels[i], ImVec2(segW, 34))) { g_mode = segModes[i]; g_errorMsg.clear(); }
+                ImGui::PopFont();
+                ImGui::PopStyleColor(4);
+            }
 
-            ImGui::InputTextWithHint("##license", "ATLAS-XXXXX-XXXXX-XXXXX",
-                                      g_licenseBuf, sizeof(g_licenseBuf));
+            ImGui::Dummy(ImVec2(0, 22));
 
-            ImGui::Dummy(ImVec2(0, 14));
+            // ── Fields per mode ──
+            const char* commitLabel = "Authenticate";
+            if (g_mode == AuthMode::License) {
+                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "LICENSE KEY"); ImGui::PopFont();
+                ImGui::Dummy(ImVec2(0, 4));
+                ImGui::InputTextWithHint("##license", "ATLAS-XXXXX-XXXXX-XXXXX", g_licenseBuf, sizeof(g_licenseBuf));
+            } else if (g_mode == AuthMode::User) {
+                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "USERNAME"); ImGui::PopFont();
+                ImGui::Dummy(ImVec2(0, 4));
+                ImGui::InputTextWithHint("##uname", "your.username", g_usernameBuf, sizeof(g_usernameBuf));
+                ImGui::Dummy(ImVec2(0, 12));
+                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "PASSWORD"); ImGui::PopFont();
+                ImGui::Dummy(ImVec2(0, 4));
+                ImGui::InputTextWithHint("##pw", "\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2", g_passwordBuf, sizeof(g_passwordBuf), ImGuiInputTextFlags_Password);
+                commitLabel = "Sign in";
+            } else { // Register
+                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "LICENSE KEY TO BIND"); ImGui::PopFont();
+                ImGui::Dummy(ImVec2(0, 4));
+                ImGui::InputTextWithHint("##reglic", "ATLAS-XXXXX-XXXXX-XXXXX", g_regLicBuf, sizeof(g_regLicBuf));
+                ImGui::Dummy(ImVec2(0, 12));
+                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "PICK A USERNAME (3-80 CHARS)"); ImGui::PopFont();
+                ImGui::Dummy(ImVec2(0, 4));
+                ImGui::InputTextWithHint("##reguser", "your.username", g_regUserBuf, sizeof(g_regUserBuf));
+                ImGui::Dummy(ImVec2(0, 12));
+                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "PICK A PASSWORD (6-128 CHARS)"); ImGui::PopFont();
+                ImGui::Dummy(ImVec2(0, 4));
+                ImGui::InputTextWithHint("##regpw", "\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2", g_regPassBuf, sizeof(g_regPassBuf), ImGuiInputTextFlags_Password);
+                commitLabel = "Register & sign in";
+            }
+
+            ImGui::Dummy(ImVec2(0, 18));
 
             ImGui::PushStyleColor(ImGuiCol_Text, COL_INK);
             ImGui::PushFont(g_FontBodyBold);
-            if (ImGui::Button("Authenticate", ImVec2(formW, 44)) ||
-                ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+            bool commit = ImGui::Button(commitLabel, ImVec2(formW, 44));
+            ImGui::PopFont();
+            ImGui::PopStyleColor();
+            if (commit || ImGui::IsKeyPressed(ImGuiKey_Enter)) {
                 g_errorMsg.clear();
-                if (g_licenseBuf[0] == '\0') {
-                    g_errorMsg = "Enter a license key.";
-                } else if (Atlas::Login(g_licenseBuf)) {
-                    FetchWelcomeInfo(g_licenseBuf);
+                bool ok = false;
+                if (g_mode == AuthMode::License) {
+                    if (g_licenseBuf[0] == '\0') g_errorMsg = "Enter a license key.";
+                    else ok = Atlas::Login(g_licenseBuf);
+                } else if (g_mode == AuthMode::User) {
+                    if (g_usernameBuf[0] == '\0' || g_passwordBuf[0] == '\0') g_errorMsg = "Enter your username and password.";
+                    else ok = Atlas::Login(g_usernameBuf, g_passwordBuf);
+                } else {
+                    if (g_regLicBuf[0] == '\0' || g_regUserBuf[0] == '\0' || g_regPassBuf[0] == '\0') {
+                        g_errorMsg = "Fill every field to register.";
+                    } else if (!Atlas::Register(g_regLicBuf, g_regUserBuf, g_regPassBuf)) {
+                        std::string em = Atlas::Data::GetErrorMessage();
+                        g_errorMsg = em.empty() ? "Registration rejected by the server." : em;
+                    } else {
+                        // Auto-login as the freshly-created account — same as the Console example.
+                        ok = Atlas::Login(g_regUserBuf, g_regPassBuf);
+                        if (!ok) {
+                            std::string em = Atlas::Data::GetErrorMessage();
+                            g_errorMsg = em.empty() ? "Sign-in after registration failed." : em;
+                        }
+                    }
+                }
+                if (ok) {
+                    FetchWelcomeInfo();
                     g_sessionStart = GetTickCount64();
                     g_screen = Screen::Welcome;
-                } else {
+                } else if (g_errorMsg.empty()) {
                     std::string em = Atlas::Data::GetErrorMessage();
                     g_errorMsg = em.empty() ? "Authentication rejected by the server." : em;
                 }
             }
-            ImGui::PopFont();
-            ImGui::PopStyleColor();
 
             if (!g_errorMsg.empty()) {
                 ImGui::Dummy(ImVec2(0, 14));
@@ -327,17 +410,18 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
 
             ImGui::Dummy(ImVec2(0, 20));
 
-            // Info card sized to fit its content exactly (no fixed height,
-            // no scrolling, no clipping).
-            struct Row { const char* k; const char* v; };
-            Row rows[] = {
-                { "License", g_info.license.c_str() },
-                { "Level",   g_info.level.c_str()   },
-                { "Expiry",  g_info.expiry.c_str()  },
-                { "HWID",    g_info.hwid.c_str()    },
-                { "IP",      g_info.ip.c_str()      },
-            };
-            const int   rowCount = (int)(sizeof(rows) / sizeof(rows[0]));
+            // Info card — cell values built here so we can format the numeric
+            // level with printf and skip the Username row on license-only sessions.
+            char levelBuf[16]; snprintf(levelBuf, sizeof(levelBuf), "%d", g_info.level);
+            struct Row { const char* k; std::string v; };
+            std::vector<Row> rows;
+            if (!g_info.username.empty()) rows.push_back({ "Username", g_info.username });
+            rows.push_back({ "License", g_info.license });
+            rows.push_back({ "Level",   levelBuf       });
+            rows.push_back({ "Expiry",  g_info.expiry  });
+            rows.push_back({ "HWID",    g_info.hwid    });
+            rows.push_back({ "IP",      g_info.ip      });
+            const int   rowCount = (int)rows.size();
             const float rowH     = ImGui::GetTextLineHeight() + 6.f;
             const float cardH    = rowCount * rowH + 24.f;
 
@@ -352,7 +436,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                     TextC(COL_FAINT, "%s", r.k);
                     ImGui::PopFont();
                     ImGui::SameLine(96);
-                    TextC(COL_HI, "%s", (r.v && r.v[0]) ? r.v : "-");
+                    TextC(COL_HI, "%s", (!r.v.empty()) ? r.v.c_str() : "-");
                 }
             }
             ImGui::EndChild();
@@ -371,7 +455,10 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                 Atlas::Network::SubmitLog("User signed out from ImGui example");
                 Atlas::Logout();
                 g_screen = Screen::Login;
-                g_licenseBuf[0] = '\0';
+                g_licenseBuf[0]  = '\0';
+                g_usernameBuf[0] = '\0';
+                g_passwordBuf[0] = '\0';
+                g_showChangePw = false; g_oldPwBuf[0] = g_newPwBuf[0] = '\0'; g_pwStatus.clear();
                 g_errorMsg.clear();
             }
             ImGui::SameLine(0, 8);
@@ -382,7 +469,52 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                     g_licenseBuf[0] = '\0';
                 }
             }
+            // Change password — visible only when signed in as a password account
+            // (GetUsername() returns non-empty). License-only sessions can't change
+            // anything so we hide the affordance.
+            if (!g_info.username.empty()) {
+                ImGui::SameLine(0, 8);
+                if (ImGui::Button(g_showChangePw ? "Cancel change" : "Change password", ImVec2(170, 36))) {
+                    g_showChangePw = !g_showChangePw;
+                    g_pwStatus.clear();
+                    if (!g_showChangePw) { g_oldPwBuf[0] = g_newPwBuf[0] = '\0'; }
+                }
+            }
             ImGui::PopStyleColor(5);
+
+            if (g_showChangePw && !g_info.username.empty()) {
+                ImGui::Dummy(ImVec2(0, 14));
+                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "CURRENT PASSWORD"); ImGui::PopFont();
+                ImGui::Dummy(ImVec2(0, 4));
+                ImGui::InputTextWithHint("##oldpw", "\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2", g_oldPwBuf, sizeof(g_oldPwBuf), ImGuiInputTextFlags_Password);
+                ImGui::Dummy(ImVec2(0, 10));
+                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "NEW PASSWORD (6-128 CHARS)"); ImGui::PopFont();
+                ImGui::Dummy(ImVec2(0, 4));
+                ImGui::InputTextWithHint("##newpw", "\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2", g_newPwBuf, sizeof(g_newPwBuf), ImGuiInputTextFlags_Password);
+                ImGui::Dummy(ImVec2(0, 12));
+                ImGui::PushStyleColor(ImGuiCol_Text, COL_INK);
+                ImGui::PushFont(g_FontBodyBold);
+                if (ImGui::Button("Update password", ImVec2(formW, 40))) {
+                    if (g_oldPwBuf[0] == '\0' || g_newPwBuf[0] == '\0') {
+                        g_pwStatus = "Fill both fields.";
+                    } else if (Atlas::Network::ChangePassword(g_oldPwBuf, g_newPwBuf)) {
+                        g_pwStatus = "Password updated. Next login uses the new password.";
+                        g_oldPwBuf[0] = g_newPwBuf[0] = '\0';
+                    } else {
+                        std::string em = Atlas::Data::GetErrorMessage();
+                        g_pwStatus = em.empty() ? "Password change failed." : em;
+                    }
+                }
+                ImGui::PopFont();
+                ImGui::PopStyleColor();
+                if (!g_pwStatus.empty()) {
+                    ImGui::Dummy(ImVec2(0, 10));
+                    ImGui::PushTextWrapPos(formW);
+                    bool ok = g_pwStatus.rfind("Password updated", 0) == 0;
+                    TextWrappedC(ok ? COL_OK : COL_ALERT, "%s", g_pwStatus.c_str());
+                    ImGui::PopTextWrapPos();
+                }
+            }
         }
 
         ImGui::PopItemWidth();

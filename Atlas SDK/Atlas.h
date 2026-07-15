@@ -25,8 +25,22 @@ namespace Atlas {
     // Initialize the authentication system (call once at top of program start or main)
     void Startup();
 
-    // Authenticate a user with their license key, returns true on success, false otherwise
+    // Authenticate a user with their license key. Returns true on success, false otherwise.
+    // The classic single-user, hardware-bound flow.
     bool Login(const std::string& license_key);
+
+    // Authenticate a user by username + password (an account previously created via Register).
+    // Same session shape after success; every Data::* / Network::* call works identically.
+    bool Login(const std::string& username, const std::string& password);
+
+    // One-shot registration: bind a license key to a new username/password account.
+    // Returns true on success. On success the caller can immediately call
+    // Login(username, password) to open a session — Register itself does not
+    // open one. Fails if the license already has an account, the username is
+    // taken, the license is invalid, or the credentials shape is rejected.
+    bool Register(const std::string& license_key,
+                  const std::string& username,
+                  const std::string& password);
 
     // Logout and terminate the current session and clear authentication state
     void Logout();
@@ -51,6 +65,12 @@ namespace Atlas {
 
         // Submit a custom log entry to appear in your applications logs (max 512 characters)
         bool SubmitLog(const char* log_text);
+
+        // Change the current password account's password.
+        // Only valid after Atlas::Login(username, password) — license-only sessions
+        // return false with an explanatory message in Data::GetErrorMessage().
+        // new_password must be 6–128 chars and differ from the old one.
+        bool ChangePassword(const std::string& old_password, const std::string& new_password);
     }
 
     // ========================================================================
@@ -59,11 +79,13 @@ namespace Atlas {
     namespace Data {
         // User license information (available in dataset after login)
         std::string GetLicense();               // License key used during login
+        std::string GetUsername();              // Password-account username (empty for license-only logins)
         std::string GetIP();                    // IP address detected by server
         std::string GetHWID();                  // Hardware ID for device binding
+        std::string GetDevice();                // Client-supplied ComputerName/Username from last auth
         std::string GetExpiry();                // Expiration date (DD-MM-YYYY HH:MM:SS) or "Lifetime"
         std::string GetNote();                  // Custom note set by admin (empty if none)
-        std::string GetLevel();                 // Access level/tier (e.g., "1", "VIP")
+        int GetLevel();                         // Numeric access level (0 when unknown)
         std::string GetFirstSeenDate();         // First authentication date (DD-MM-YYYY HH:MM:SS)
         std::string GetLastSeenDate();          // Last authentication date (DD-MM-YYYY HH:MM:SS)
 
@@ -86,7 +108,6 @@ namespace Atlas {
         bool IsBanned();                        // True if user account is banned
 
         // Device info
-        std::string GetDevice();                // Client-supplied ComputerName/Username from last auth
     }
 
     // ========================================================================

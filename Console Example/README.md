@@ -13,17 +13,17 @@ Console Example/
 ├── README.md                            you are here
 ├── Atlas Auth Example.cpp               the whole example — ~60 lines
 ├── Atlas Auth Example.sln               Visual Studio 2022 solution
-├── Atlas Auth Example.vcxproj           MSBuild project (already wired to ../shared/)
+├── Atlas Auth Example.vcxproj           MSBuild project (already wired to ../Atlas SDK/)
 └── Atlas Auth Example.vcxproj.filters   VS solution explorer grouping
 ```
 
-Links against [`../shared/Atlas Auth.lib`](../shared/) and includes [`../shared/Atlas.h`](../shared/Atlas.h). No other project deps.
+Links against [`../Atlas SDK/Atlas Auth.lib`](../Atlas SDK/) and includes [`../Atlas SDK/Atlas.h`](../Atlas SDK/Atlas.h). No other project deps.
 
 ---
 
 ## Build
 
-1. **Set your API key** in [`../shared/Atlas.h`](../shared/Atlas.h):
+1. **Set your API key** in [`../Atlas SDK/Atlas.h`](../Atlas SDK/Atlas.h):
    ```cpp
    namespace Atlas { inline std::string API_KEY = "your-key"; }
    ```
@@ -75,7 +75,7 @@ Just the three moves:
 
 3. **`Atlas::Network::CheckAuthentication()`** and the `Atlas::Data::Get*()` family — the accessors you use in your app.
 
-That's the shape. Full API surface in [`../shared/Atlas.h`](../shared/Atlas.h); reference table in [`../README.md`](../README.md#api-reference).
+That's the shape. Full API surface in [`../Atlas SDK/Atlas.h`](../Atlas SDK/Atlas.h); reference table in [`../README.md`](../README.md#api-reference).
 
 ---
 
