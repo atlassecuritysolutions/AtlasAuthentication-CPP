@@ -19,7 +19,7 @@ ImGui Example/
 └── imgui/                                 ← YOU vendor Dear ImGui here (one-time)
 ```
 
-The example links against `../shared/Atlas Auth.lib` and includes `../shared/Atlas.h` — same shared SDK as the console example. Nothing about the auth stack changes because you're rendering with ImGui.
+The example links against `../Atlas SDK/Atlas Auth.lib` and includes `../Atlas SDK/Atlas.h` — same SDK as the console example. Nothing about the auth stack changes because you're rendering with ImGui.
 
 ---
 
@@ -62,7 +62,7 @@ The .vcxproj references these files by name — if any are missing, the build wi
 
 ## Build
 
-1. **Set your API key** in [`../shared/Atlas.h`](../shared/Atlas.h) (or leave the value you set for the console example — it's the same header):
+1. **Set your API key** in [`../Atlas SDK/Atlas.h`](../Atlas%20SDK/Atlas.h) (or leave the value you set for the console example — it's the same header):
    ```cpp
    namespace Atlas { inline std::string API_KEY = "your-key"; }
    ```
@@ -113,8 +113,8 @@ The palette matches [atlassecurity.site](https://atlassecurity.site) pixel-for-p
 
 - **Dear ImGui** — MIT-licensed, vendored under `./imgui/` (see setup above)
 - **`d3d11.lib`, `dxgi.lib`, `d3dcompiler.lib`** — shipped with the Windows 10/11 SDK
-- **`../shared/Atlas Auth.lib`** — the Atlas SDK static library
-- **`../shared/Atlas.h`** — the SDK header
+- **`../Atlas SDK/Atlas Auth.lib`** — the Atlas SDK static library
+- **`../Atlas SDK/Atlas.h`** — the SDK header
 
 Windows 10+ has DX11 built in. No runtime installs required on the target machine.
 
@@ -122,7 +122,7 @@ Windows 10+ has DX11 built in. No runtime installs required on the target machin
 
 ## Prefer the console version?
 
-If you want zero UI dependency, use [`../Console Example/`](../Console%20Example/) instead — same Atlas SDK, ~60 lines of code, links the same shared library. Both examples are self-contained; pick whichever fits your app and delete the other.
+If you want zero UI dependency, use [`../Console Example/`](../Console%20Example/) instead — same Atlas SDK, ~60 lines of code, links the same library. Both examples are self-contained; pick whichever fits your app and delete the other.
 
 ---
 

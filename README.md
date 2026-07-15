@@ -41,7 +41,7 @@ This repo contains the SDK header, the prebuilt static library, and two runnable
 
 ```
 C++ Integration/
-├── shared/
+├── Atlas SDK/
 │   ├── Atlas.h                          the SDK header — the API you call
 │   └── Atlas Auth.lib                   the static library — you link against this
 ├── Console Example/
@@ -87,7 +87,7 @@ Free tier is 3 applications, 300 licenses across them, 3 file uploads per app.
 
 The minimum viable integration. Read it once and you know the SDK.
 
-1. Open [`shared/Atlas.h`](shared/Atlas.h). Replace `"YOUR_API_KEY"` with your key. Save.
+1. Open [`Atlas SDK/Atlas.h`](Atlas%20SDK/Atlas.h). Replace `"YOUR_API_KEY"` with your key. Save.
 2. Open [`Console Example/Atlas Auth Example.sln`](Console%20Example/).
 3. Set configuration to **Release · x64**. (32-bit will not link.)
 4. Build: `Ctrl+Shift+B`.
@@ -107,7 +107,7 @@ Active Users: 1
 Total Users:  3
 ```
 
-Open the dashboard **Logs** tab — your login is there with IP, HWID, latency, and result `ALLOW`. Try **Sessions → Kick** — the example dies within 5 seconds via `__fastfail`. That's the loop.
+Open the dashboard **Logs** tab — your login is there with IP, HWID, latency, and result `ALLOW`. From **Sessions → Kick**, terminate the session; the example ends within 5 seconds via `__fastfail`.
 
 The whole example lives in [`Console Example/Atlas Auth Example.cpp`](Console%20Example/Atlas%20Auth%20Example.cpp).
 
@@ -115,7 +115,7 @@ The whole example lives in [`Console Example/Atlas Auth Example.cpp`](Console%20
 
 ## ImGui example
 
-A native Windows GUI: two-panel login → welcome flow, cold-steel design, Segoe UI, DirectX 11. Same SDK underneath, only the shell differs.
+A native Windows GUI: two-panel login → welcome flow, Segoe UI, DirectX 11. Same SDK underneath, only the shell differs.
 
 Dear ImGui is not shipped in this repo (MIT, upstream). Vendor it once:
 
@@ -135,7 +135,7 @@ ImGui Example/imgui/
     └── imgui_impl_win32.cpp  imgui_impl_win32.h
 ```
 
-Reuse the same API key you set in `shared/Atlas.h`. Open the .sln, build **Release · x64**, run with `Ctrl+F5`. A 940×640 login window appears. Sign in and you land on a welcome screen with the full session card and **Sign out** / **Recheck session** buttons.
+Reuse the same API key you set in `Atlas SDK/Atlas.h`. Open the .sln, build **Release · x64**, run with `Ctrl+F5`. A 940×640 login window appears. Sign in and you land on a welcome screen with the full session card and **Sign out** / **Recheck session** buttons.
 
 Fonts, styling, backend detail: [`ImGui Example/README.md`](ImGui%20Example/README.md).
 
@@ -143,11 +143,11 @@ Fonts, styling, backend detail: [`ImGui Example/README.md`](ImGui%20Example/READ
 
 ## Integrate into your project
 
-1. Copy [`shared/Atlas.h`](shared/Atlas.h) and [`shared/Atlas Auth.lib`](shared/Atlas%20Auth.lib) into your project (a `vendor/atlas/` folder is conventional).
+1. Copy [`Atlas SDK/Atlas.h`](Atlas%20SDK/Atlas.h) and [`Atlas SDK/Atlas Auth.lib`](Atlas%20SDK/Atlas%20Auth.lib) into your project (a `vendor/atlas/` folder is conventional).
 2. In your Visual Studio project properties for **Release | x64**:
    - **C/C++ → General → Additional Include Directories** — add the folder holding `Atlas.h`
    - **Linker → General → Additional Library Directories** — same folder
-   - **Linker → Input → Additional Dependencies** — add `Atlas Auth.lib;` (the filename literally has a space)
+   - **Linker → Input → Additional Dependencies** — add `Atlas Auth.lib;` (the filename contains a space; include it as-is)
 3. Set your API key inline in `Atlas.h`, or (recommended for shipping) from your own code before `Startup()`:
    ```cpp
    Atlas::API_KEY = LoadKeyFromSignedRemoteConfig();
@@ -179,15 +179,21 @@ Once you have a shipping build, compute its SHA-256 and paste it into **Applicat
 
 ## API reference
 
-Everything callable lives in [`shared/Atlas.h`](shared/Atlas.h).
+Everything callable lives in [`Atlas SDK/Atlas.h`](Atlas%20SDK/Atlas.h).
 
 ### Core
 
 ```cpp
-void Atlas::Startup();                                   // call once at program start
-bool Atlas::Login(const std::string& license_key);       // true on success, false on rejection
-void Atlas::Logout();                                    // gentle sign-out; process stays alive
+void Atlas::Startup();                                                       // call once at program start
+bool Atlas::Login(const std::string& license_key);                           // license-only login
+bool Atlas::Login(const std::string& username, const std::string& password); // user-account login
+bool Atlas::Register(const std::string& license_key,                         // one-shot: bind a
+                     const std::string& username,                            // license key to a new
+                     const std::string& password);                           // username/password account
+void Atlas::Logout();                                                        // gentle sign-out; process stays alive
 ```
+
+**Three login paths, one auth stack.** A license key alone authenticates a single-user, hardware-bound install (the classic model). `Register` binds a license key to a username + password so the end user can carry their license across devices without you rotating HWIDs; after that, `Login(username, password)` authenticates them anywhere the HWID rules of the license permit. Same session shape after login regardless of path; every subsequent `Data::*` and `Network::*` call is identical.
 
 ### `Atlas::Data` — session state (valid after `Login`)
 
@@ -244,7 +250,7 @@ On any failure: `__fastfail()` from kernel. No dialog. No exception handler. No 
 
 ## The API-key model
 
-The API key is a **routing identifier** — it says "send this request to my dashboard account." What actually authenticates every request:
+The API key is a **routing identifier** — it tells the server which dashboard account the request belongs to. Authentication of each request rests on:
 
 1. The X25519 handshake — derives a per-session HMAC key only your app and the server know.
 2. The Ed25519 signature the server puts on its handshake reply — verified against three keys pinned inside `Atlas Auth.lib` (primary, backup, emergency). A nulled server cannot produce these signatures.
@@ -260,7 +266,7 @@ A leaked API key does not, by itself, let an attacker impersonate a user. Still,
 
 **`LNK2019: unresolved external symbol "Atlas::Startup"`** — `Atlas Auth.lib` isn't in the linker inputs, or the library search path doesn't include its folder. See step 2 of integration.
 
-**`error C2039: 'API_KEY': is not a member of 'Atlas'`** — you're compiling against an old `Atlas.h`. Copy the current one from `shared/`.
+**`error C2039: 'API_KEY': is not a member of 'Atlas'`** — you're compiling against an old `Atlas.h`. Copy the current one from `Atlas SDK/`.
 
 **Startup terminates the process immediately** — the SDK's kill path fired. Common causes: API key still `"YOUR_API_KEY"`; API key for a deleted app; debugger attached (test with `Ctrl+F5`). Check the dashboard **Logs** tab for the exact reason.
 
@@ -300,7 +306,7 @@ Full FAQ: [atlassecurity.site/docs](https://atlassecurity.site/docs).
 
 Bug reports: include the OS version, Visual Studio version, the failing SDK call, and the dashboard **Logs** entry if there is one.
 
-To rebuild `Atlas Auth.lib` from source (only if you're modifying SDK internals): open `Auth Library/Atlas Auth/Atlas Auth.sln`, build **Release · x64** or **Ship-All · x64**, and the output overwrites `C++ Integration/shared/Atlas Auth.lib` in place.
+To rebuild `Atlas Auth.lib` from source (only if you're modifying SDK internals): open `Auth Library/Atlas Auth/Atlas Auth.sln`, build **Release · x64** or **Ship-All · x64**, and the output overwrites `C++ Integration/Atlas SDK/Atlas Auth.lib` in place.
 
 ---
 
