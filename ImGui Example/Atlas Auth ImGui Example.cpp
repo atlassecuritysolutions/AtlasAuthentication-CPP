@@ -67,24 +67,39 @@ void CleanupRenderTarget();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // ── App state ────────────────────────────────────────────────────────────
-enum class Screen   { Login, Welcome };
+enum class Screen   { Login, Verify, Welcome };
 // Auth mode segments on the Login screen — matches the Console example so
 // users can test every path Atlas supports from any of the four examples.
 enum class AuthMode { License, User, Register };
-static Screen   g_screen  = Screen::Login;
-static AuthMode g_mode    = AuthMode::License;
-static char     g_licenseBuf [128] = "";
-static char     g_usernameBuf[96]  = "";
-static char     g_passwordBuf[136] = "";
-static char     g_regLicBuf  [128] = "";
-static char     g_regUserBuf [96]  = "";
-static char     g_regPassBuf [136] = "";
+// Which flow the pending 8-digit code belongs to. Verify screen renders the
+// same form either way; only the copy + the submit call differ.
+enum class VerifyKind { None, SignIn, EmailConfirm };
+static Screen     g_screen  = Screen::Login;
+static AuthMode   g_mode    = AuthMode::License;
+static VerifyKind g_verifyKind = VerifyKind::None;
+static char       g_licenseBuf [128] = "";
+static char       g_usernameBuf[96]  = "";
+static char       g_passwordBuf[136] = "";
+static char       g_regUserBuf [96]  = "";
+static char       g_regPassBuf [136] = "";
+static char       g_regEmailBuf[128] = "";
+// Verify screen state — the 8-digit code + any masked email / IP / country
+// the server sent back with the challenge (empty on the register path).
+static char        g_verifyCodeBuf[16] = "";
+static std::string g_verifyMaskedEmail;
+static std::string g_verifySignInIp;
+static std::string g_verifySignInCountry;
+// Register-path credential stash — so the sign-in that follows email confirm
+// uses the same values without asking the user again.
+static std::string g_pendingRegUser;
+static std::string g_pendingRegPass;
 // Change-password state (Welcome screen — only shown for user-mode sessions)
 static bool     g_showChangePw = false;
 static char     g_oldPwBuf[136] = "";
 static char     g_newPwBuf[136] = "";
 static std::string g_pwStatus; // banner under the change-password form
 static std::string g_errorMsg;
+static std::string g_notice;      // green success banner (e.g. "account created")
 static ULONGLONG g_sessionStart = 0;
 
 struct WelcomeInfo {
@@ -294,9 +309,9 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
             ImGui::Dummy(ImVec2(0, 6));
             ImGui::PushTextWrapPos(formW);
             TextWrappedC(COL_LO, g_mode == AuthMode::Register
-                ? "Bind a license key to a new username/password. On success you'll be signed in as the new account automatically."
+                ? "Create a username and password. Supply an email to receive a confirmation code and unlock password reset."
                 : g_mode == AuthMode::User
-                ? "Sign in with the username and password you registered earlier (or that was provisioned in the dashboard)."
+                ? "Sign in with your username and password. From a new device we'll email you an 8-digit code."
                 : "Your license is checked against the Atlas server, tied to this machine's hardware, and re-verified every five seconds while the program runs.");
             ImGui::PopTextWrapPos();
 
@@ -313,7 +328,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                 ImGui::PushStyleColor(ImGuiCol_ButtonActive,  on ? COL_SIGNAL_HI : COL_RAISED_HI);
                 ImGui::PushStyleColor(ImGuiCol_Text,          on ? COL_INK       : COL_LO);
                 ImGui::PushFont(on ? g_FontBodyBold : g_FontBody);
-                if (ImGui::Button(segLabels[i], ImVec2(segW, 34))) { g_mode = segModes[i]; g_errorMsg.clear(); }
+                if (ImGui::Button(segLabels[i], ImVec2(segW, 34))) { g_mode = segModes[i]; g_errorMsg.clear(); g_notice.clear(); }
                 ImGui::PopFont();
                 ImGui::PopStyleColor(4);
             }
@@ -336,18 +351,18 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                 ImGui::InputTextWithHint("##pw", "\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2", g_passwordBuf, sizeof(g_passwordBuf), ImGuiInputTextFlags_Password);
                 commitLabel = "Sign in";
             } else { // Register
-                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "LICENSE KEY TO BIND"); ImGui::PopFont();
-                ImGui::Dummy(ImVec2(0, 4));
-                ImGui::InputTextWithHint("##reglic", "ATLAS-XXXXX-XXXXX-XXXXX", g_regLicBuf, sizeof(g_regLicBuf));
-                ImGui::Dummy(ImVec2(0, 12));
-                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "PICK A USERNAME (3-80 CHARS)"); ImGui::PopFont();
+                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "USERNAME"); ImGui::PopFont();
                 ImGui::Dummy(ImVec2(0, 4));
                 ImGui::InputTextWithHint("##reguser", "your.username", g_regUserBuf, sizeof(g_regUserBuf));
                 ImGui::Dummy(ImVec2(0, 12));
-                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "PICK A PASSWORD (6-128 CHARS)"); ImGui::PopFont();
+                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "PASSWORD"); ImGui::PopFont();
                 ImGui::Dummy(ImVec2(0, 4));
                 ImGui::InputTextWithHint("##regpw", "\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2", g_regPassBuf, sizeof(g_regPassBuf), ImGuiInputTextFlags_Password);
-                commitLabel = "Register & sign in";
+                ImGui::Dummy(ImVec2(0, 12));
+                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "EMAIL (OPTIONAL — UNLOCKS PASSWORD RESET)"); ImGui::PopFont();
+                ImGui::Dummy(ImVec2(0, 4));
+                ImGui::InputTextWithHint("##regemail", "you@example.com", g_regEmailBuf, sizeof(g_regEmailBuf));
+                commitLabel = "Create account";
             }
 
             ImGui::Dummy(ImVec2(0, 18));
@@ -362,34 +377,217 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                 bool ok = false;
                 if (g_mode == AuthMode::License) {
                     if (g_licenseBuf[0] == '\0') g_errorMsg = "Enter a license key.";
-                    else ok = Atlas::Login(g_licenseBuf);
-                } else if (g_mode == AuthMode::User) {
-                    if (g_usernameBuf[0] == '\0' || g_passwordBuf[0] == '\0') g_errorMsg = "Enter your username and password.";
-                    else ok = Atlas::Login(g_usernameBuf, g_passwordBuf);
-                } else {
-                    if (g_regLicBuf[0] == '\0' || g_regUserBuf[0] == '\0' || g_regPassBuf[0] == '\0') {
-                        g_errorMsg = "Fill every field to register.";
-                    } else if (!Atlas::Register(g_regLicBuf, g_regUserBuf, g_regPassBuf)) {
+                    else ok = Atlas::License::Login(g_licenseBuf);
+                }
+                else if (g_mode == AuthMode::User) {
+                    // ================================================================
+                    // ACCOUNT SIGN-IN — headless flow. account.Login() reports a
+                    // status; on NeedsVerification we move to the Verify screen and
+                    // let the user type the 8-digit code we just emailed them.
+                    //
+                    // You can replace this entire branch (and the Verify screen
+                    // below) with a single call:
+                    //
+                    //     ok = Atlas::Account::Dialog::Login(g_usernameBuf, g_passwordBuf);
+                    //
+                    // — the built-in Win32 verify dialog pops over the ImGui window,
+                    // runs the code prompt, and closes when the session is live.
+                    // ================================================================
+                    if (g_usernameBuf[0] == '\0' || g_passwordBuf[0] == '\0') {
+                        g_errorMsg = "Enter your username and password.";
+                    } else {
+                        auto r = Atlas::Account::Login(g_usernameBuf, g_passwordBuf);
+                        using S = Atlas::Account::LoginResult::Status;
+                        if (r.status == S::Ok) {
+                            ok = true;
+                        } else if (r.status == S::NeedsVerification) {
+                            g_verifyKind          = VerifyKind::SignIn;
+                            g_verifyMaskedEmail   = r.masked_email;
+                            g_verifySignInIp      = r.sign_in_ip;
+                            g_verifySignInCountry = r.sign_in_country;
+                            g_verifyCodeBuf[0]    = '\0';
+                            g_screen              = Screen::Verify;
+                        } else {
+                            g_errorMsg = r.error_message.empty() ? "Wrong username or password." : r.error_message;
+                        }
+                    }
+                }
+                else { // Register
+                    // ================================================================
+                    // REGISTER — create the account, confirm the email if supplied,
+                    // then sign in. Register alone does NOT open a session.
+                    //
+                    // You can replace this entire branch (and the Verify screen
+                    // below) with a single call:
+                    //
+                    //     Atlas::Account::Dialog::Register();
+                    //
+                    // — the built-in Win32 register dialog collects credentials,
+                    // opens the email-confirmation dialog automatically when an
+                    // email was supplied, and reports success.
+                    // ================================================================
+                    if (g_regUserBuf[0] == '\0' || g_regPassBuf[0] == '\0') {
+                        g_errorMsg = "Enter a username and password.";
+                    } else if (!Atlas::Account::Register(g_regUserBuf, g_regPassBuf, g_regEmailBuf)) {
                         std::string em = Atlas::Data::GetErrorMessage();
                         g_errorMsg = em.empty() ? "Registration rejected by the server." : em;
+                    } else if (Atlas::Account::HasPendingEmailConfirm()) {
+                        // Email supplied → move to Verify. We stash credentials so
+                        // the sign-in that follows uses the exact values the user
+                        // just entered, without asking again.
+                        g_pendingRegUser = g_regUserBuf;
+                        g_pendingRegPass = g_regPassBuf;
+                        g_verifyKind     = VerifyKind::EmailConfirm;
+                        g_verifyMaskedEmail   = g_regEmailBuf;
+                        g_verifySignInIp.clear();
+                        g_verifySignInCountry.clear();
+                        g_verifyCodeBuf[0] = '\0';
+                        g_screen = Screen::Verify;
                     } else {
-                        // Auto-login as the freshly-created account — same as the Console example.
-                        ok = Atlas::Login(g_regUserBuf, g_regPassBuf);
-                        if (!ok) {
-                            std::string em = Atlas::Data::GetErrorMessage();
-                            g_errorMsg = em.empty() ? "Sign-in after registration failed." : em;
-                        }
+                        // No email supplied - account is created directly.
+                        // Prefill the Sign-in tab with the username and pop
+                        // the user back so they can sign in when ready.
+                        std::string createdUser = g_regUserBuf;
+                        strncpy_s(g_usernameBuf, createdUser.c_str(), sizeof(g_usernameBuf) - 1);
+                        g_regUserBuf[0] = g_regPassBuf[0] = g_regEmailBuf[0] = '\0';
+                        g_mode = AuthMode::User;
+                        g_notice = "Account '" + createdUser + "' is ready. Sign in when you like.";
                     }
                 }
                 if (ok) {
                     FetchWelcomeInfo();
                     g_sessionStart = GetTickCount64();
                     g_screen = Screen::Welcome;
-                } else if (g_errorMsg.empty()) {
+                } else if (g_errorMsg.empty() && g_screen == Screen::Login) {
                     std::string em = Atlas::Data::GetErrorMessage();
                     g_errorMsg = em.empty() ? "Authentication rejected by the server." : em;
                 }
             }
+
+            if (!g_errorMsg.empty()) {
+                ImGui::Dummy(ImVec2(0, 14));
+                ImGui::PushTextWrapPos(formW);
+                TextWrappedC(COL_ALERT, "%s", g_errorMsg.c_str());
+                ImGui::PopTextWrapPos();
+            }
+            if (!g_notice.empty()) {
+                ImGui::Dummy(ImVec2(0, 14));
+                ImGui::PushTextWrapPos(formW);
+                TextWrappedC(COL_OK, "%s", g_notice.c_str());
+                ImGui::PopTextWrapPos();
+            }
+        }
+        else if (g_screen == Screen::Verify) {
+            // ── Verify screen — 8-digit code, in-app. Same shape for both a
+            // sign-in verification and a registration email-confirm; the copy
+            // + the submit call are the only differences.
+            const bool isConfirm = g_verifyKind == VerifyKind::EmailConfirm;
+            ImGui::PushFont(g_FontHeading);
+            TextC(COL_HI, isConfirm ? "Confirm your email" : "Verify your sign-in");
+            ImGui::PopFont();
+
+            ImGui::Dummy(ImVec2(0, 6));
+            ImGui::PushTextWrapPos(formW);
+            if (isConfirm) {
+                TextWrappedC(COL_LO,
+                    "We emailed an 8-digit confirmation code to %s. Enter it to confirm the account, then sign in.",
+                    g_verifyMaskedEmail.c_str());
+            } else if (!g_verifySignInIp.empty()) {
+                TextWrappedC(COL_LO,
+                    "We emailed an 8-digit code to %s (from %s%s%s). Enter it to complete the sign-in.",
+                    g_verifyMaskedEmail.c_str(),
+                    g_verifySignInIp.c_str(),
+                    g_verifySignInCountry.empty() ? "" : " / ",
+                    g_verifySignInCountry.c_str());
+            } else {
+                TextWrappedC(COL_LO,
+                    "We emailed an 8-digit code to %s. Enter it to complete the sign-in.",
+                    g_verifyMaskedEmail.c_str());
+            }
+            ImGui::PopTextWrapPos();
+
+            ImGui::Dummy(ImVec2(0, 20));
+            ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "8-DIGIT CODE"); ImGui::PopFont();
+            ImGui::Dummy(ImVec2(0, 4));
+            ImGui::InputTextWithHint("##vcode", "12345678", g_verifyCodeBuf, sizeof(g_verifyCodeBuf),
+                                     ImGuiInputTextFlags_CharsDecimal);
+
+            ImGui::Dummy(ImVec2(0, 18));
+
+            ImGui::PushStyleColor(ImGuiCol_Text, COL_INK);
+            ImGui::PushFont(g_FontBodyBold);
+            bool submit = ImGui::Button("Verify", ImVec2(formW, 44));
+            ImGui::PopFont();
+            ImGui::PopStyleColor();
+            if (submit || ImGui::IsKeyPressed(ImGuiKey_Enter)) {
+                g_errorMsg.clear();
+                bool ok = false;
+                if (isConfirm) {
+                    if (!Atlas::Account::ConfirmEmail(g_verifyCodeBuf)) {
+                        std::string em = Atlas::Data::GetErrorMessage();
+                        g_errorMsg = em.empty() ? "That code didn't match. Try again." : em;
+                    } else {
+                        // Email confirmed. Registration is complete. Pop back
+                        // to the Sign-in tab with a success banner - the user
+                        // signs in whenever they want.
+                        std::string confirmedUser = g_pendingRegUser;
+                        g_pendingRegUser.clear();
+                        g_pendingRegPass.clear();
+                        // Prefill the Sign-in tab with the username they just
+                        // registered so they can just type the password.
+                        strncpy_s(g_usernameBuf, confirmedUser.c_str(), sizeof(g_usernameBuf) - 1);
+                        g_regUserBuf[0] = g_regPassBuf[0] = g_regEmailBuf[0] = '\0';
+                        g_verifyCodeBuf[0] = '\0';
+                        g_verifyKind = VerifyKind::None;
+                        g_verifyMaskedEmail.clear();
+                        g_verifySignInIp.clear();
+                        g_verifySignInCountry.clear();
+                        g_mode = AuthMode::User;
+                        g_notice = "Account '" + confirmedUser + "' is ready. Sign in when you like.";
+                        g_screen = Screen::Login;
+                    }
+                } else {
+                    if (!Atlas::Account::SubmitVerification(g_verifyCodeBuf)) {
+                        std::string em = Atlas::Data::GetErrorMessage();
+                        g_errorMsg = em.empty() ? "That code didn't match. Try again." : em;
+                    } else {
+                        ok = true;
+                    }
+                }
+                if (ok) {
+                    FetchWelcomeInfo();
+                    g_sessionStart = GetTickCount64();
+                    g_screen = Screen::Welcome;
+                }
+            }
+
+            // Resend link (sign-in flow only — register-confirm has no server-side resend).
+            if (!isConfirm) {
+                ImGui::Dummy(ImVec2(0, 6));
+                ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0,0,0,0));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, COL_RAISED);
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive,  COL_RAISED_HI);
+                ImGui::PushStyleColor(ImGuiCol_Text,          COL_LO);
+                if (ImGui::Button("Didn't get it? Resend", ImVec2(formW, 32))) {
+                    if (!Atlas::Account::ResendVerification()) {
+                        std::string em = Atlas::Data::GetErrorMessage();
+                        g_errorMsg = em.empty() ? "Resend rejected. Try again in a moment." : em;
+                    }
+                }
+                ImGui::PopStyleColor(4);
+            }
+
+            // Cancel — back to the credentials screen.
+            ImGui::Dummy(ImVec2(0, 2));
+            ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0,0,0,0));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, COL_RAISED);
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive,  COL_RAISED_HI);
+            ImGui::PushStyleColor(ImGuiCol_Text,          COL_FAINT);
+            if (ImGui::Button("Cancel", ImVec2(formW, 32))) {
+                g_screen = Screen::Login;
+                g_errorMsg.clear();
+            }
+            ImGui::PopStyleColor(4);
 
             if (!g_errorMsg.empty()) {
                 ImGui::Dummy(ImVec2(0, 14));
@@ -458,8 +656,16 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                 g_licenseBuf[0]  = '\0';
                 g_usernameBuf[0] = '\0';
                 g_passwordBuf[0] = '\0';
+                g_regUserBuf[0]  = '\0';
+                g_regPassBuf[0]  = '\0';
+                g_regEmailBuf[0] = '\0';
+                g_verifyCodeBuf[0] = '\0';
+                g_verifyMaskedEmail.clear(); g_verifySignInIp.clear(); g_verifySignInCountry.clear();
+                g_pendingRegUser.clear(); g_pendingRegPass.clear();
+                g_verifyKind = VerifyKind::None;
                 g_showChangePw = false; g_oldPwBuf[0] = g_newPwBuf[0] = '\0'; g_pwStatus.clear();
                 g_errorMsg.clear();
+                g_notice.clear();
             }
             ImGui::SameLine(0, 8);
             if (ImGui::Button("Recheck session", ImVec2(160, 36))) {
@@ -488,7 +694,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                 ImGui::Dummy(ImVec2(0, 4));
                 ImGui::InputTextWithHint("##oldpw", "\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2", g_oldPwBuf, sizeof(g_oldPwBuf), ImGuiInputTextFlags_Password);
                 ImGui::Dummy(ImVec2(0, 10));
-                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "NEW PASSWORD (6-128 CHARS)"); ImGui::PopFont();
+                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "NEW PASSWORD"); ImGui::PopFont();
                 ImGui::Dummy(ImVec2(0, 4));
                 ImGui::InputTextWithHint("##newpw", "\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2", g_newPwBuf, sizeof(g_newPwBuf), ImGuiInputTextFlags_Password);
                 ImGui::Dummy(ImVec2(0, 12));

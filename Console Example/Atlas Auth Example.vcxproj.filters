@@ -15,17 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Atlas Auth Example.cpp">
+    <ClCompile Include="Atlas.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="Atlas Auth.lib">
-      <Filter>Source Files</Filter>
-    </Library>
+    <Library Include="..\Atlas SDK\Atlas Auth.lib" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Atlas.h">
+    <ClInclude Include="..\Atlas SDK\Atlas.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
