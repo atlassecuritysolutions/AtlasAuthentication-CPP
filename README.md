@@ -10,7 +10,6 @@ This repo contains the SDK header, the prebuilt static library, and two runnable
 
 ## Contents
 
-- [What ships in the box](#what-ships-in-the-box)
 - [Repo layout](#repo-layout)
 - [Prerequisites](#prerequisites)
 - [Get an account, an app, a license](#get-an-account-an-app-a-license)
@@ -24,16 +23,6 @@ This repo contains the SDK header, the prebuilt static library, and two runnable
 - [Pricing](#pricing)
 - [Support](#support)
 - [Legal](#legal)
-
----
-
-## What ships in the box
-
-- Ephemeral X25519 handshake and Ed25519-signed server reply on every connection — server impersonation is refused by construction.
-- 5-second heartbeat with a rotating token, `.text` + IAT checks every 15 s, continuous inline-hook scan on `ws2_32.recv/send/connect`.
-- Debugger, hardware breakpoint, injected-module, and manual-map detection.
-- Mutual watchdog on two threads driven by hardware performance counters.
-- On integrity failure, the process is ended via kernel `__fastfail()` — no dialog, no exception handler, nothing catchable.
 
 ---
 
