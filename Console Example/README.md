@@ -10,11 +10,11 @@ The minimum viable Atlas integration. A Windows console app that prompts for a l
 
 ```
 Console Example/
-├── README.md                            you are here
-├── Atlas Auth Example.cpp               the whole example — ~60 lines
-├── Atlas Auth Example.sln               Visual Studio 2022 solution
-├── Atlas Auth Example.vcxproj           MSBuild project (already wired to ../Atlas SDK/)
-└── Atlas Auth Example.vcxproj.filters   VS solution explorer grouping
+├-- README.md                            you are here
+├-- Atlas Auth Example.cpp               the whole example — ~60 lines
+├-- Atlas Auth Example.sln               Visual Studio 2022 solution
+├-- Atlas Auth Example.vcxproj           MSBuild project (already wired to ../Atlas SDK/)
+└-- Atlas Auth Example.vcxproj.filters   VS solution explorer grouping
 ```
 
 Links against [`../Atlas SDK/Atlas Auth.lib`](../Atlas SDK/) and includes [`../Atlas SDK/Atlas.h`](../Atlas SDK/Atlas.h). No other project deps.

@@ -27,7 +27,7 @@
 
 #pragma comment(lib, "shell32.lib")
 
-// ── Atlas cold-steel palette (source: atlassecurity.site) ────────────────
+// -- Atlas cold-steel palette (source: atlassecurity.site) ----------------
 static const ImVec4 COL_INK        = ImVec4(0x08 / 255.f, 0x0f / 255.f, 0x1e / 255.f, 1.0f);
 static const ImVec4 COL_PANEL      = ImVec4(0x0e / 255.f, 0x1a / 255.f, 0x30 / 255.f, 1.0f);
 static const ImVec4 COL_RAISED     = ImVec4(0x14 / 255.f, 0x23 / 255.f, 0x3d / 255.f, 1.0f);
@@ -42,7 +42,7 @@ static const ImVec4 COL_SIGNAL_HI  = ImVec4(0x5f / 255.f, 0xb0 / 255.f, 0xe8 / 2
 static const ImVec4 COL_OK         = ImVec4(0x62 / 255.f, 0xcd / 255.f, 0xa0 / 255.f, 1.0f);
 static const ImVec4 COL_ALERT      = ImVec4(0xf0 / 255.f, 0x81 / 255.f, 0x7f / 255.f, 1.0f);
 
-// ── DX11 globals (identical to reference) ────────────────────────────────
+// -- DX11 globals (identical to reference) --------------------------------
 static ID3D11Device*            g_pd3dDevice = nullptr;
 static ID3D11DeviceContext*     g_pd3dDeviceContext = nullptr;
 static IDXGISwapChain*          g_pSwapChain = nullptr;
@@ -50,7 +50,7 @@ static bool                     g_SwapChainOccluded = false;
 static UINT                     g_ResizeWidth = 0, g_ResizeHeight = 0;
 static ID3D11RenderTargetView*  g_mainRenderTargetView = nullptr;
 
-// ── Font handles ─────────────────────────────────────────────────────────
+// -- Font handles ---------------------------------------------------------
 // Three sizes for real hierarchy: body 15px, heading 24px, eyebrow 10.5px.
 // If Segoe UI isn't found (very rare on Windows), ImGui's default is used
 // as a fallback, but the app still runs.
@@ -66,7 +66,7 @@ void CreateRenderTarget();
 void CleanupRenderTarget();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-// ── App state ────────────────────────────────────────────────────────────
+// -- App state ------------------------------------------------------------
 enum class Screen   { Login, Verify, Welcome };
 // Auth mode segments on the Login screen — matches the Console example so
 // users can test every path Atlas supports from any of the four examples.
@@ -107,7 +107,7 @@ struct WelcomeInfo {
     int level = 0;
 } g_info;
 
-// ── Style + fonts ────────────────────────────────────────────────────────
+// -- Style + fonts --------------------------------------------------------
 // Use Segoe UI from the Windows system font folder. It's present on every
 // Windows install this SDK supports (7+), so no shipping fonts, no assets/
 // dir next to the exe. If a customer's Windows install is nonstandard
@@ -266,7 +266,7 @@ static void FetchWelcomeInfo() {
     g_info.total    = Atlas::Data::GetUserCount();
 }
 
-// ── The Atlas UI - split-panel form-on-left brand-on-right ───────────────
+// -- The Atlas UI - split-panel form-on-left brand-on-right ---------------
 static void RenderAtlasWindow(const ImGuiIO& io) {
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(io.DisplaySize);
@@ -315,7 +315,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                 : "Your license is checked against the Atlas server, tied to this machine's hardware, and re-verified every five seconds while the program runs.");
             ImGui::PopTextWrapPos();
 
-            // ── Mode picker — 3 pill buttons acting as a segmented control ────
+            // -- Mode picker — 3 pill buttons acting as a segmented control ----
             ImGui::Dummy(ImVec2(0, 20));
             const float segW = (formW - 12.f) / 3.f;
             const char* segLabels[3] = { "License key", "User login", "Register" };
@@ -335,7 +335,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
 
             ImGui::Dummy(ImVec2(0, 22));
 
-            // ── Fields per mode ──
+            // -- Fields per mode --
             const char* commitLabel = "Authenticate";
             if (g_mode == AuthMode::License) {
                 ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "LICENSE KEY"); ImGui::PopFont();
@@ -478,7 +478,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
             }
         }
         else if (g_screen == Screen::Verify) {
-            // ── Verify screen — 8-digit code, in-app. Same shape for both a
+            // -- Verify screen — 8-digit code, in-app. Same shape for both a
             // sign-in verification and a registration email-confirm; the copy
             // + the submit call are the only differences.
             const bool isConfirm = g_verifyKind == VerifyKind::EmailConfirm;
@@ -854,7 +854,7 @@ int APIENTRY WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     return 0;
 }
 
-// ── DX11 helpers (identical to reference) ────────────────────────────────
+// -- DX11 helpers (identical to reference) --------------------------------
 bool CreateDeviceD3D(HWND hWnd)
 {
     DXGI_SWAP_CHAIN_DESC sd;

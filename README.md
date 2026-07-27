@@ -41,19 +41,19 @@ This repo contains the SDK header, the prebuilt static library, and two runnable
 
 ```
 C++ Integration/
-├── Atlas SDK/
-│   ├── Atlas.h                          the SDK header — the API you call
-│   └── Atlas Auth.lib                   the static library — you link against this
-├── Console Example/
-│   ├── Atlas Auth Example.cpp           ~60 lines: Startup, Login, print session
-│   ├── Atlas Auth Example.sln
-│   └── Atlas Auth Example.vcxproj
-└── ImGui Example/
-    ├── README.md                        Dear ImGui vendoring step
-    ├── Atlas Auth ImGui Example.cpp     native GUI login → welcome flow
-    ├── Atlas Auth ImGui Example.sln
-    ├── Atlas Auth ImGui Example.vcxproj
-    └── imgui/                           ← you vendor Dear ImGui here (one-time)
+├-- Atlas SDK/
+│   ├-- Atlas.h                          the SDK header — the API you call
+│   └-- Atlas Auth.lib                   the static library — you link against this
+├-- Console Example/
+│   ├-- Atlas Auth Example.cpp           ~60 lines: Startup, Login, print session
+│   ├-- Atlas Auth Example.sln
+│   └-- Atlas Auth Example.vcxproj
+└-- ImGui Example/
+    ├-- README.md                        Dear ImGui vendoring step
+    ├-- Atlas Auth ImGui Example.cpp     native GUI login → welcome flow
+    ├-- Atlas Auth ImGui Example.sln
+    ├-- Atlas Auth ImGui Example.vcxproj
+    └-- imgui/                           ← you vendor Dear ImGui here (one-time)
 ```
 
 `Atlas Auth.lib` is prebuilt and committed. You don't rebuild the SDK to use it.
@@ -129,10 +129,10 @@ Or download the source zip from [github.com/ocornut/imgui/releases](https://gith
 
 ```
 ImGui Example/imgui/
-├── imgui.cpp, imgui_draw.cpp, imgui_tables.cpp, imgui_widgets.cpp, imgui.h
-└── backends/
-    ├── imgui_impl_dx11.cpp   imgui_impl_dx11.h
-    └── imgui_impl_win32.cpp  imgui_impl_win32.h
+├-- imgui.cpp, imgui_draw.cpp, imgui_tables.cpp, imgui_widgets.cpp, imgui.h
+└-- backends/
+    ├-- imgui_impl_dx11.cpp   imgui_impl_dx11.h
+    └-- imgui_impl_win32.cpp  imgui_impl_win32.h
 ```
 
 Reuse the same API key you set in `Atlas SDK/Atlas.h`. Open the .sln, build **Release · x64**, run with `Ctrl+F5`. A 940×640 login window appears. Sign in and you land on a welcome screen with the full session card and **Sign out** / **Recheck session** buttons.

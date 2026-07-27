@@ -30,7 +30,7 @@ namespace Atlas {
     inline std::string API_KEY = "YOUR_API_KEY_HERE";
 
 
-    // ── Session lifecycle ───────────────────────────────────────────────────
+    // -- Session lifecycle ---------------------------------------------------
 
     // Initialise the library. Call once at the top of main().
     void Startup();
@@ -42,7 +42,7 @@ namespace Atlas {
     void Exit();
 
 
-    // ── License mode ────────────────────────────────────────────────────────
+    // -- License mode --------------------------------------------------------
     // Classic single-user, license-key auth. No email, no verify code.
 
     namespace License {
@@ -70,7 +70,7 @@ namespace Atlas {
     }
 
 
-    // ── Account mode ────────────────────────────────────────────────────────
+    // -- Account mode --------------------------------------------------------
     // Multi-user (username / password / email) accounts with email verify,
     // password reset, and the redeem-a-key-onto-my-account flow.
 
@@ -134,7 +134,7 @@ namespace Atlas {
     }
 
 
-    // ── Non-auth dialogs ────────────────────────────────────────────────────
+    // -- Non-auth dialogs ----------------------------------------------------
     // Reusable Win32 dialogs unrelated to a specific auth flow. Global theme
     // and per-dialog customisation live in the Dialog namespace too (see below).
 
@@ -154,7 +154,7 @@ namespace Atlas {
     }
 
 
-    // ── Network ─────────────────────────────────────────────────────────────
+    // -- Network -------------------------------------------------------------
     // Direct server RPCs on the current session.
 
     namespace Network {
@@ -178,7 +178,7 @@ namespace Atlas {
     }
 
 
-    // ── Data ────────────────────────────────────────────────────────────────
+    // -- Data ----------------------------------------------------------------
     // Read-only session accessors. Populated after a successful sign-in.
 
     namespace Data {
@@ -217,7 +217,7 @@ namespace Atlas {
     }
 
 
-    // ── Variables ───────────────────────────────────────────────────────────
+    // -- Variables -----------------------------------------------------------
     // Read-only key/value store you configure on the dashboard.
 
     namespace Variables {
@@ -227,7 +227,7 @@ namespace Atlas {
     }
 
 
-    // ── Webhook ─────────────────────────────────────────────────────────────
+    // -- Webhook -------------------------------------------------------------
     // Fire-and-forget HTTP POSTs (Discord, Slack, custom). Unrelated to Atlas auth.
 
     namespace Webhook {
@@ -240,7 +240,7 @@ namespace Atlas {
     }
 
 
-    // ── Types ───────────────────────────────────────────────────────────────
+    // -- Types ---------------------------------------------------------------
     // Struct definitions kept out of the API surface above so the function
     // list reads fast. Just data shapes here.
 

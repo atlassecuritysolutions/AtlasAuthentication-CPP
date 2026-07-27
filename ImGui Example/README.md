@@ -12,11 +12,11 @@ Cold-steel palette from [atlassecurity.site](https://atlassecurity.site), real S
 
 ```
 ImGui Example/
-├── README.md                              you are here
-├── Atlas Auth ImGui Example.cpp           the whole example — login screen + welcome screen
-├── Atlas Auth ImGui Example.sln           Visual Studio 2022 solution
-├── Atlas Auth ImGui Example.vcxproj       MSBuild project (references imgui/ + backends/)
-└── imgui/                                 ← YOU vendor Dear ImGui here (one-time)
+├-- README.md                              you are here
+├-- Atlas Auth ImGui Example.cpp           the whole example — login screen + welcome screen
+├-- Atlas Auth ImGui Example.sln           Visual Studio 2022 solution
+├-- Atlas Auth ImGui Example.vcxproj       MSBuild project (references imgui/ + backends/)
+└-- imgui/                                 ← YOU vendor Dear ImGui here (one-time)
 ```
 
 The example links against `../Atlas SDK/Atlas Auth.lib` and includes `../Atlas SDK/Atlas.h` — same SDK as the console example. Nothing about the auth stack changes because you're rendering with ImGui.
@@ -41,19 +41,19 @@ Grab the latest source from [github.com/ocornut/imgui/releases](https://github.c
 
 ```
 ImGui Example/
-├── Atlas Auth ImGui Example.cpp
-├── Atlas Auth ImGui Example.sln
-├── Atlas Auth ImGui Example.vcxproj
-├── README.md
-└── imgui/                          ← added
-    ├── imgui.cpp
-    ├── imgui.h
-    ├── imgui_draw.cpp
-    ├── imgui_tables.cpp
-    ├── imgui_widgets.cpp
-    └── backends/
-        ├── imgui_impl_dx11.cpp / .h
-        └── imgui_impl_win32.cpp / .h
+├-- Atlas Auth ImGui Example.cpp
+├-- Atlas Auth ImGui Example.sln
+├-- Atlas Auth ImGui Example.vcxproj
+├-- README.md
+└-- imgui/                          ← added
+    ├-- imgui.cpp
+    ├-- imgui.h
+    ├-- imgui_draw.cpp
+    ├-- imgui_tables.cpp
+    ├-- imgui_widgets.cpp
+    └-- backends/
+        ├-- imgui_impl_dx11.cpp / .h
+        └-- imgui_impl_win32.cpp / .h
 ```
 
 The .vcxproj references these files by name — if any are missing, the build will fail at link time with an obvious "unresolved external" for the ImGui symbols.
