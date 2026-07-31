@@ -8,3 +8,7 @@ Release/
 DLL-Debug/
 DLL-Release/
 Ship-All/
+
+*.zip
+
+*.zip.sha256
