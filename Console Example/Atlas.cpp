@@ -120,21 +120,29 @@ int main()
         return 1;
     }
 
-    // Call periodically to verify the session is still valid - the SDK
-    // terminates the process if the server has revoked the session.
-    Atlas::Network::CheckAuthentication();
-
     // Session data - every field is populated the moment authed is true.
     // GetUsername() is empty on license-only sessions.
+    //
+    // Note: the SDK's heartbeat thread validates the session every 3-7s on
+    // its own. Calling Atlas::Network::CheckAuthentication() here is only
+    // needed if your app wants a synchronous "is my session still valid
+    // right now" check on demand (e.g. before performing a sensitive
+    // action). We skip it in this example because the SDK's own heartbeat
+    // is authoritative.
+    // On account sessions GetLicense() returns a synthetic "user:<name>" —
+    // hide it and print Username instead. On license-only sessions Username
+    // is empty and License is the real key.
     std::cout << "\n--- User Information ---\n";
-    if (!Atlas::Data::GetUsername().empty())
+    const bool is_account = !Atlas::Data::GetUsername().empty();
+    if (is_account)
         std::cout << "Username:     " << Atlas::Data::GetUsername() << "\n";
-    std::cout << "License:      " << Atlas::Data::GetLicense() << "\n"
-              << "Expiry:       " << Atlas::Data::GetExpiry()  << "\n"
-              << "IP:           " << Atlas::Data::GetIP()      << "\n"
-              << "HWID:         " << Atlas::Data::GetHWID()    << "\n"
-              << "Level:        " << Atlas::Data::GetLevel()   << "\n"
-              << "Note:         " << Atlas::Data::GetNote()    << "\n"
+    else
+        std::cout << "License:      " << Atlas::Data::GetLicense() << "\n";
+    std::cout << "Expiry:       " << Atlas::Data::GetExpiry() << "\n"
+              << "IP:           " << Atlas::Data::GetIP()     << "\n"
+              << "HWID:         " << Atlas::Data::GetHWID()   << "\n"
+              << "Level:        " << Atlas::Data::GetLevel()  << "\n"
+              << "Note:         " << Atlas::Data::GetNote()   << "\n"
               << "Active Users: " << Atlas::Data::GetActiveUserCount() << "\n"
               << "Total Users:  " << Atlas::Data::GetUserCount()       << "\n";
 

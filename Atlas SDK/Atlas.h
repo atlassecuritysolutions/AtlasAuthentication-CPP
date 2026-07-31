@@ -27,7 +27,7 @@
 namespace Atlas {
 
     // Your app's API key. Get it from atlassecurity.site/dashboard.
-    inline std::string API_KEY = "YOUR_API_KEY_HERE";
+    inline std::string API_KEY = "894kO8WB5suGzk1KuLGoKsZyJPlnUEbYc3LYzZQq8axmgwFZ1rGBMnWzN6Wnjx8q";
 
 
     // -- Session lifecycle ---------------------------------------------------
