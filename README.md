@@ -4,7 +4,7 @@
 
 [atlassecurity.site](https://atlassecurity.site) · [Dashboard](https://atlassecurity.site/dashboard) · [Docs](https://atlassecurity.site/docs) · [Discord](https://discord.gg/EG5dmpFaCF) · [mail@atlassecurity.site](mailto:mail@atlassecurity.site)
 
-Most authentication libraries stop working once login succeeds — the client is trusted for the rest of the session. Atlas doesn't make that assumption. After `Login` returns, the SDK keeps proving to the server that the process is still the one that logged in: same binary, same memory, same network stack, still alive. If any of that stops being true, the process is terminated immediately.
+Most authentication libraries stop working once login succeeds — the client is trusted for the rest of the session. Atlas doesn't make that assumption. After `Login` returns, the SDK keeps proving to the server that the process is still the one that logged in: same binary, same memory, same network stack, still alive. If any of that stops being true, the process is terminated strictly. Atlas is built on a A-Z Zero-trust structure with logically untamperable code, that is how we have created Atlas. For teams whose licensing gets bypassed and whos binaries get cracked.
 
 Two calls get you there:
 
@@ -13,7 +13,7 @@ Atlas::Startup();
 Atlas::License::Login(key);
 ```
 
-This repo contains the SDK header, the prebuilt static library, and two runnable examples — a console app and a native DirectX 11 / Dear ImGui GUI.
+This repo contains the SDK header, the prebuilt static library, and two runnable examples — a console example and a native DirectX 11 / Dear ImGui example.
 
 ---
 
@@ -63,9 +63,6 @@ C++ Integration/
 
 `Atlas Auth.lib` is prebuilt and committed. The SDK's source isn't part of this repo — you link against the library, you don't build it.
 
-> [!NOTE]
-> `Atlas Auth.lib` is roughly 15 MB. Static linking pulls all of it into your `.exe`; UPX compresses that down about 4:1 if you need a smaller binary.
-
 ---
 
 ## Prerequisites
@@ -85,7 +82,7 @@ No Boost, no vcpkg, no CMake, no redistributables. `Atlas Auth.lib` links static
 
 1. Sign up at [atlassecurity.site](https://atlassecurity.site), verify your email.
 2. **Applications → New application** — name it whatever; users never see it. Copy the **API key** it hands you.
-3. **Licenses → Generate** — pick a duration (Weekly / Monthly / Lifetime / custom), a level (`1` for basic, `2+` for tiered), and optionally a note. Copy the key — format is `ATLAS-XXXXX-XXXXX`.
+3. **Licenses → Generate** — pick a duration (Weekly / Monthly / Lifetime / custom), a level (`1` for basic, `2+` for tiered), and optionally a note. Copy the key.
 4. *(Optional, for the account flow)* **Applications → Account policy** — choose when verification codes fire (never / first login / every N / once per day / new HWID / new HWID or IP / always). Toggle "email required at registration" if you want to force email addresses.
 
 Free tier: 3 applications, 300 licenses across them, 3 file uploads per app.
@@ -108,7 +105,7 @@ The example asks which auth path to try:
 Atlas Authentication Example
 
 Choose an auth path:
-  [1] License key       (classic, HWID-bound)
+  [1] License key       (classic license authentication)
   [2] Account sign-in   (username + password + email verification)
   [3] Register account  (creates a new account, optional email)
 
@@ -122,9 +119,9 @@ Pick `[1]`, paste your license key. On success:
 License:      ATLAS-A9F2K-4RMXM
 Expiry:       15-08-2026 14:32:00
 IP:           45.11.42.187
-HWID:         Atlas-4A9C...E1B2
+HWID:         Atlas-4A9C...
 Level:        1
-Note:
+Note:         None
 Active Users: 1
 Total Users:  3
 ```
@@ -190,7 +187,7 @@ Fonts, styling, backend detail: [`ImGui Example/README.md`](ImGui%20Example/READ
            return 1;
        }
 
-       RunMyApplication();  // authenticated
+       // authenticated
        return 0;
    }
    ```
@@ -214,7 +211,7 @@ Everything callable lives in [`Atlas SDK/Atlas.h`](Atlas%20SDK/Atlas.h).
 Every integration touches these four calls, regardless of auth path.
 
 ```cpp
-Atlas::API_KEY = "your-key";   // set before Startup, or leave inline in Atlas.h
+Atlas::API_KEY = "YOUR_API_KEY";   // set before Startup, or leave inline in Atlas.h
 Atlas::Startup();              // call once at the top of main()
 Atlas::Logout();               // end the session, clear all state
 Atlas::Exit();                 // hard-terminate the process, uncatchable
@@ -369,7 +366,7 @@ The API key is a **routing identifier** — it tells the server which dashboard 
 5. The executable-hash whitelist, if you've configured one.
 
 > [!IMPORTANT]
-> A leaked API key alone doesn't let an attacker impersonate a user — but treat it as sensitive. Rotate it on suspected exposure (**Settings → Rotate key**) and keep it out of public source.
+> A leaked API key alone doesn't let an attacker impersonate a user — but treat it as sensitive. Rotate it on suspected exposure (**Settings → Reset API Key**) and keep it out of public source.
 
 ---
 
