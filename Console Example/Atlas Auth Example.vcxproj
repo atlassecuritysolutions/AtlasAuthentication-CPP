@@ -135,7 +135,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Atlas.cpp" />
+    <ClCompile Include="Atlas Auth Example.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Atlas SDK\Atlas.h" />

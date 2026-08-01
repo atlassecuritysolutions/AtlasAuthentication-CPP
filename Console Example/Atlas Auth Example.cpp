@@ -1,5 +1,9 @@
-// Atlas Authentication Library - Example Usage (Console)
-// Build as Release/x64 | Set your API key in Atlas.h (Atlas::API_KEY)
+// Atlas SDK — Console example (C++).
+// Build Release / x64. Set your API key in Atlas.h (Atlas::API_KEY = "...").
+//
+//   Dashboard: https://atlassecurity.site/dashboard
+//   Docs:      https://atlassecurity.site/docs
+//   Legal:     https://atlassecurity.site/legal
 
 #include <Windows.h>
 #include <iostream>

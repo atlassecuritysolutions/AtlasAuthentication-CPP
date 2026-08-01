@@ -7,7 +7,7 @@
 // Atlas authentication library.
 // Get your API key from atlassecurity.site/dashboard.
 //
-//   Atlas::API_KEY = "your-key";
+//   Atlas::API_KEY = "YOUR_API_KEY";
 //   Atlas::Startup();
 //   if (Atlas::License::Login("license-key")) { /* signed in */ }
 //
@@ -27,7 +27,7 @@
 namespace Atlas {
 
     // Your app's API key. Get it from atlassecurity.site/dashboard.
-    inline std::string API_KEY = "894kO8WB5suGzk1KuLGoKsZyJPlnUEbYc3LYzZQq8axmgwFZ1rGBMnWzN6Wnjx8q";
+    inline std::string API_KEY = "YOUR_API_KEY";
 
 
     // -- Session lifecycle ---------------------------------------------------

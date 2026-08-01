@@ -1,18 +1,19 @@
-// ============================================================================
-// Atlas Authentication - Dear ImGui + DirectX 11 Example
+// Atlas SDK — ImGui example (Dear ImGui + DirectX 11).
 //
-// Structure taken from Dear ImGui's official example_win32_directx11 loop
-// (which everyone links against and which provably works). Atlas SDK calls
-// layered on top of the reference loop -- no changes to how ImGui + DX11
-// initialize or how the event loop pumps.
+//   Dashboard: https://atlassecurity.site/dashboard
+//   Docs:      https://atlassecurity.site/docs
+//   Legal:     https://atlassecurity.site/legal
 //
-// Look mirrors atlassecurity.site: cold-steel palette, three real font sizes
-// (body / heading / eyebrow) loaded from Segoe UI, split-panel form-on-left
-// brand-on-right, filled circle bullets drawn on the draw list. No asterisks,
-// no default ImGui bitmap font, no drop-shadows.
+// Structure follows Dear ImGui's official example_win32_directx11 loop
+// verbatim. Atlas SDK calls are layered on top; the ImGui + DX11 setup and
+// event pump are unchanged.
 //
-// Set your API key in ../Atlas SDK/Atlas.h  (Atlas::API_KEY inline std::string).
-// ============================================================================
+// The look mirrors atlassecurity.site: cold-steel palette, three real font
+// sizes (body / heading / eyebrow) loaded from Segoe UI, split-panel form-
+// on-left, brand-on-right, filled circle bullets drawn on the ImGui draw
+// list. No asterisks, no default ImGui bitmap font, no drop shadows.
+//
+// Set your API key in ../Atlas SDK/Atlas.h (Atlas::API_KEY).
 
 #include "imgui.h"
 #include "imgui_impl_win32.h"
