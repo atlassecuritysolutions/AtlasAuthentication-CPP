@@ -373,20 +373,19 @@ The API key is a **routing identifier** — it tells the server which dashboard 
 
 ## Troubleshooting
 
-**`LNK2019: unresolved external symbol "Atlas::Startup"`** — `Atlas Auth.lib` isn't in the linker inputs, or the library search path doesn't include its folder. See step 2 of [Integrate into your project](#integrate-into-your-project).
+**`LNK2019: unresolved external symbol "Atlas::Startup"`** — `Atlas Auth.lib` isn't linked, or the library search path doesn't include the SDK. See [Integrate into your project](#integrate-into-your-project).
 
-**`error C2039: 'API_KEY': is not a member of 'Atlas'`** — you're compiling against an old `Atlas.h`. Copy the current one from `Atlas SDK/`.
+**`error C2039: 'API_KEY': is not a member of 'Atlas'`** — you're compiling against an outdated `Atlas.h`. Replace it with the current version from `Atlas SDK/`.
 
-**Startup terminates the process immediately** — the SDK's kill path fired. Common causes: API key still set to `"YOUR_API_KEY"`; API key belongs to a deleted app; a debugger is attached (test with `Ctrl+F5`, not `F5`). Check the dashboard **Logs** tab for the reason.
+**Application exits during `Startup()`** — Atlas terminated the process after an integrity check failed. Verify `Atlas::API_KEY` is set correctly, the application still exists in the dashboard, and no debugger is attached (`Ctrl+F5`, not `F5`). See **Dashboard → Logs** for the exact failure reason.
 
-**`Login` returns `false`, "Executable hash mismatch"** — you whitelisted a hash and then rebuilt. Update the whitelist, or don't whitelist during active development.
+**`Login()` returns `false`** — call `Atlas::Data::GetErrorMessage()` to determine the failure. Common causes include an executable hash mismatch (after rebuilding), an expired or banned license, a banned HWID, or invalid credentials.
 
-**`Login` returns `false`, "License banned" / "HWID banned"** — check **Bans** in the dashboard.
+**`Account::Login()` returns `NeedsVerification`** — no verified account exists yet. Configure an email sender for the application, verify email delivery in **Dashboard → Logs**, then call `Account::ResendVerification()` if needed (60-second cooldown).
 
-**`Account::Login` returns `NeedsVerification` but no email arrives** — the app has no email sender configured, or the recipient's inbox rejected it. Check the **Logs** tab for the outbound event; `Account::ResendVerification()` has a 60-second cooldown.
+**Process exits unexpectedly after authentication** — a runtime integrity check failed. Common causes include modified code sections, injected modules, hooked imports, failed server signature verification, or an extended heartbeat timeout. See **Dashboard → Logs** for the reported reason.
 
-**Process exits silently, no message** — an integrity check tripped the kill path. Dashboard **Logs** shows the reason: `.text` modified, IAT hooked, injected module, server signature verification failed (nulled or MITM'd server), or the heartbeat couldn't reach the server for too long.
-
+Please! view the when you have any runtime troubles [Atlas Diagnostic Logs](#diagnostic-logs)
 Full FAQ: [atlassecurity.site/docs](https://atlassecurity.site/docs).
 
 ---
@@ -406,7 +405,7 @@ Each entry in `logs\` is a complete record of one event:
 
 ```
 [Atlas Exit Report]
-Time:   2026-08-02 8:20:50
+Time:   2026-08-02 8:38:50
 Reason: CheckAuthentication: not authenticated or no session
 File:   Atlas Auth.cpp
 Line:   2258
