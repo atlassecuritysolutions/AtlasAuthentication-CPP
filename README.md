@@ -4,7 +4,7 @@
 
 [atlassecurity.site](https://atlassecurity.site) · [Dashboard](https://atlassecurity.site/dashboard) · [Docs](https://atlassecurity.site/docs) · [Discord](https://discord.gg/EG5dmpFaCF) · [mail@atlassecurity.site](mailto:mail@atlassecurity.site)
 
-Most authentication libraries stop working once login succeeds — the client is trusted for the rest of the session. Atlas doesn't make that assumption. After `Login` returns, the SDK keeps proving to the server that the process is still the one that logged in: same binary, same memory, same network stack, still alive. If any of that stops being true, the process is terminated strictly. Atlas is built on a A-Z Zero-trust structure with logically untamperable code, that is how we have created Atlas. For teams whose licensing gets bypassed and whos binaries get cracked.
+Most auth libraries stop caring once login succeeds — the client is trusted for the rest of the session. Atlas doesn't. After `Login` returns, the SDK keeps proving to the server that the process is still the one that logged in: same binary, same memory, same network stack, still alive. If any of that stops being true, the process dies. Built for teams whose licensing keeps getting bypassed and whose binaries keep getting cracked.
 
 Two calls get you there:
 
@@ -12,8 +12,6 @@ Two calls get you there:
 Atlas::Startup();
 Atlas::License::Login(key);
 ```
-
-This repo contains the SDK header, the prebuilt static library, and two runnable examples — a console example and a native DirectX 11 / Dear ImGui example.
 
 ---
 
@@ -61,7 +59,7 @@ C++ Integration/
     └── imgui/                        ← you vendor Dear ImGui here (one-time)
 ```
 
-`Atlas Auth.lib` is prebuilt and committed. The SDK's source isn't part of this repo — you link against the library, you don't build it.
+`Atlas Auth.lib` is prebuilt and committed. You link against the library — you don't build the SDK source.
 
 ---
 
@@ -69,7 +67,7 @@ C++ Integration/
 
 | | |
 |---|---|
-| Windows 10 or 11 (x64) | Atlas is Windows-x64 only. No Linux, macOS, ARM. |
+| Windows 10 or 11 (x64) | Atlas is Windows-x64 only. |
 | [Visual Studio 2022](https://visualstudio.microsoft.com/vs/community/) | Community edition is fine. |
 | **Desktop development with C++** workload | Installs MSVC v143, Windows SDK, MSBuild. |
 | An Atlas account | [atlassecurity.site](https://atlassecurity.site) — free. |
@@ -91,7 +89,7 @@ Free tier: 3 applications, 300 licenses across them, 3 file uploads per app.
 
 ## Console example
 
-Covers all three auth paths in about 150 lines.
+Covers all three auth paths.
 
 1. Open [`Atlas SDK/Atlas.h`](Atlas%20SDK/Atlas.h). Replace `"YOUR_API_KEY"` with your key. Save.
 2. Open [`Console Example/Atlas Auth Example.sln`](Console%20Example/).
@@ -204,7 +202,7 @@ Once you have a shipping build, compute its SHA-256 and paste it into **Applicat
 
 ## API reference
 
-Everything callable lives in [`Atlas SDK/Atlas.h`](Atlas%20SDK/Atlas.h).
+Full API surface in [`Atlas SDK/Atlas.h`](Atlas%20SDK/Atlas.h).
 
 ### Session lifecycle
 
@@ -335,7 +333,7 @@ Theming for every built-in Win32 dialog. Set these once before opening any `Atla
 Atlas::Dialog::AppName = "My App";                       // title bar text
 Atlas::Dialog::theme   = Atlas::Dialog::Theme::Dark;     // Dark or Light
 Atlas::Dialog::parent  = my_main_hwnd;                   // modal parent, null = foreground
-Atlas::Dialog::accents.signal = 0xFFE04A2C;              // 0xAARRGGBB colour overrides
+Atlas::Dialog::accents.signal = 0xFFE04A2C;              // 0xAARRGGBB color overrides
 Atlas::Dialog::copy.verify_title = "Enter code";         // string overrides
 Atlas::Dialog::FatalError(title, body, error_code);
 ```
