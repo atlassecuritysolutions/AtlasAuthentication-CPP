@@ -35,6 +35,7 @@ Atlas::License::Login(key);
 - [What Login starts](#what-login-starts)
 - [The API-key model](#the-api-key-model)
 - [Troubleshooting](#troubleshooting)
+- [IMPORANT - Atlas Diagnostic Logs](#diagnostic-logs)
 - [Support](#support)
 - [Legal](#legal)
 
@@ -48,7 +49,7 @@ C++ Integration/
 │   ├── Atlas.h                       the API you call
 │   └── Atlas Auth.lib                the static library — link against this
 ├── Console Example/
-│   ├── Atlas Auth Example.cpp        ~150 lines: license, account, and register paths
+│   ├── Atlas Auth Example.cpp        the star of the show
 │   ├── Atlas Auth Example.sln
 │   └── Atlas Auth Example.vcxproj
 └── ImGui Example/
@@ -56,10 +57,10 @@ C++ Integration/
     ├── Atlas Auth ImGui Example.cpp  native GUI login → welcome flow
     ├── Atlas Auth ImGui Example.sln
     ├── Atlas Auth ImGui Example.vcxproj
-    └── imgui/                        ← you vendor Dear ImGui here (one-time)
+    └── imgui/                        ← you vendor Dear ImGui here
 ```
 
-`Atlas Auth.lib` is prebuilt and committed. You link against the library — you don't build the SDK source.
+`Atlas Auth.lib` is prebuilt and committed. You link against the library — you don't build the SDK source. The Atlas SDK source code is private.
 
 ---
 
@@ -79,7 +80,7 @@ No Boost, no vcpkg, no CMake, no redistributables. `Atlas Auth.lib` links static
 ## Get an account, an app, a license
 
 1. Sign up at [atlassecurity.site](https://atlassecurity.site), verify your email.
-2. **Applications → New application** — name it whatever; users never see it. Copy the **API key** it hands you.
+2. **Applications → New application** — name it as you like, this will be often shown to end users in MessageBoxes or Emails, Copy the **API key** it hands you.
 3. **Licenses → Generate** — pick a duration (Weekly / Monthly / Lifetime / custom), a level (`1` for basic, `2+` for tiered), and optionally a note. Copy the key.
 4. *(Optional, for the account flow)* **Applications → Account policy** — choose when verification codes fire (never / first login / every N / once per day / new HWID / new HWID or IP / always). Toggle "email required at registration" if you want to force email addresses.
 
@@ -136,7 +137,7 @@ Full source: [`Console Example/Atlas Auth Example.cpp`](Console%20Example/Atlas%
 
 A native Windows GUI: two-panel login → welcome flow, Segoe UI, DirectX 11. Same SDK underneath, different shell — every thread the console example starts is running here too.
 
-Dear ImGui isn't shipped in this repo (MIT license, upstream). Vendor it once:
+If Dear ImGui isn't found for some reason in your source code. Vendor it once:
 
 ```
 cd "ImGui Example"
@@ -144,7 +145,7 @@ git submodule add https://github.com/ocornut/imgui.git imgui
 git submodule update --init --recursive
 ```
 
-Or download the source zip from [github.com/ocornut/imgui/releases](https://github.com/ocornut/imgui/releases) and drop it in `ImGui Example/imgui/` so the tree looks like:
+Or download the source zip from [github.com/ocornut/imgui/releases](https://github.com/ocornut/imgui/releases) and drop it in `ImGui Example/imgui/` so the pathing looks like:
 
 ```
 ImGui Example/imgui/
@@ -154,7 +155,7 @@ ImGui Example/imgui/
     └── imgui_impl_win32.cpp  imgui_impl_win32.h
 ```
 
-Reuse the API key you already set in `Atlas SDK/Atlas.h`. Open the `.sln`, build **Release · x64**, run with `Ctrl+F5`. A 940×640 login window appears; sign in and you land on a welcome screen with a session card and **Sign out** / **Recheck session** buttons.
+Reuse the API key you already set in `Atlas SDK/Atlas.h`. Open the `.sln`, build **Release · x64**, run with `Ctrl+F5`. A login window appears; sign in and you land on a welcome screen with a session card and **Sign out** / **Recheck session** buttons.
 
 Fonts, styling, backend detail: [`ImGui Example/README.md`](ImGui%20Example/README.md).
 
@@ -169,7 +170,7 @@ Fonts, styling, backend detail: [`ImGui Example/README.md`](ImGui%20Example/READ
    - **Linker → Input → Additional Dependencies** — add `Atlas Auth.lib;` (the filename contains a space; include it as-is)
 3. Set your API key inline in `Atlas.h`, or from your own code before `Startup()`:
    ```cpp
-   Atlas::API_KEY = LoadKeyFromSignedRemoteConfig();
+   Atlas::API_KEY = "YOUR_API_KEY";
    Atlas::Startup();
    ```
 4. Wire it up — headless path:
@@ -342,20 +343,22 @@ Atlas::Dialog::FatalError(title, body, error_code);
 
 ## What Login starts
 
-On success, `Login` starts background threads. You don't manage any of them directly — they run until `Logout()`, `Exit()`, or a failed check terminates the process.
+`Login` doesn't end at the handshake. From that point forward, every assumption gets re-verified for the entire life of the session — nothing is trusted just because it was true a moment ago. This is zero trust applied to the client itself, not just the connection.
 
-- **Every 5 seconds** — a heartbeat signed with a per-session HMAC key, sequence-numbered, echoing the server's newest challenge nonce. The server can push messages, kick the session, or terminate the process in its reply.
-- **Every 15 seconds** — a deep sweep: `.text` CRC compared against the startup snapshot, full IAT check against the resolved-imports snapshot.
-- **Before every heartbeat** — the first bytes of `ws2_32.recv` / `send` / `connect` are inspected for hook signatures. A hooked network function is the standard foundation for a man-in-the-middle on the auth channel, so the SDK terminates before any data crosses it.
-- **Continuously** — the executable's page map is compared against the post-login snapshot; PEB, `NtQueryInformationProcess`, `DR0`–`DR7`, and VEH debugger checks run; two independent threads verify each other's liveness through hardware performance counters.
+- **The server re-authenticates the session continuously, not once.** Every check the client passed at login runs again, on a loop, for as long as the process is alive. Passing once buys you nothing later — you keep proving it.
+- **Every message between client and server is signed, fresh, and single-use.** Nothing is replayable. A captured request, however perfectly captured, is worthless the moment it's reused.
+- **The server holds full control over every live session, in real time.** It can end, message, or re-verify any session on demand — the client has no ability to resist, delay, or negotiate.
+- **The binary and its runtime state are continuously verified against what was there at login.** Any modification, any injected code, any external interference with the running process is treated as a compromise — not logged, not flagged, acted on.
+- **Detection never announces itself.** No dialog, no error, no exception, nothing to hook or intercept. The response to a failed check is the process ending — not a message telling an attacker what they tripped.
+- **Nothing static ever sits in the client waiting to be stolen.** No reusable secret, no long-lived token, no single value that unlocks the next session if it leaks.
 
-Any failure terminates the process at kernel level. There is no dialog, no exception you can catch, no signal you can hook.
+This is the actual model: authentication isn't a gate the client passes through once. It's a relationship the server keeps re-verifying, continuously, until the session ends — on the server's terms, not the client's.
 
 ---
 
 ## The API-key model
 
-The API key is a **routing identifier** — it tells the server which dashboard account a request belongs to. It is not what authenticates a request. That rests on:
+The API key is a **routing identifier** — it tells the server which dashboard account and application a request belongs to. It is not what authenticates a request. That rests on:
 
 1. An X25519 handshake, deriving a fresh HMAC key per session.
 2. The Ed25519 signature the server places on its handshake reply, verified against three keys pinned inside `Atlas Auth.lib` (primary, backup, emergency). A nulled server can't produce these signatures.
@@ -388,6 +391,32 @@ Full FAQ: [atlassecurity.site/docs](https://atlassecurity.site/docs).
 
 ---
 
+## Diagnostic logs
+
+> [!IMPORTANT]
+> Every session-ending event — a failed integrity check, a lost connection, a server-issued end to the session — is written to disk the moment it occurs, with the exact cause, source file, and line. The `logs\` folder itself always exists, on every machine running an Atlas-built application, end users included.
+
+Press **`Win + R`**, paste:
+
+```
+%LOCALAPPDATA%\AtlasAuth
+```
+
+Each entry in `logs\` is a complete record of one event:
+
+```
+[Atlas Exit Report]
+Time:   2026-08-02 8:08:50
+Reason: CheckAuthentication: not authenticated or no session
+File:   Atlas Auth.cpp
+Line:   2258
+```
+
+> [!NOTE]
+> The rest of `%LOCALAPPDATA%\AtlasAuth` — `installed.flag`, `declined.flag`, `commit.sha`, `manage_autoupdate.bat` — is dev-only. Those files exist to drive the MSBuild auto-update hook and only appear when a dev environment (Visual Studio, VS Code, MSBuild, JetBrains, and similar) is detected. `logs\` is the only part of this folder your end users will ever have. Always remember to check this folder to diagnose any issues, it is your #1 GOTO!
+
+---
+
 ## Support
 
 - **Docs** — [atlassecurity.site/docs](https://atlassecurity.site/docs)
@@ -402,18 +431,23 @@ The SDK's source is not distributed with this repo. If you need a custom build o
 
 ## Legal
 
-© 2025–2026 Atlas Security Solutions. All rights reserved. Sold by Atlas Security Solutions, Jeddah, Kingdom of Saudi Arabia.
+© 2025–2026 Atlas Security Solutions. All rights reserved.
+Sold by Atlas Security Solutions — Jeddah, Kingdom of Saudi Arabia.
 
-This SDK exists so developers can integrate Atlas Authentication into their software. If that's you, use it freely.
+This SDK is licensed, not sold, for one purpose: integrating Atlas Authentication into your own software. That is the entire grant. Nothing here implies any broader right.
 
-**Prohibited without explicit written authorization:**
-- Reverse engineering, decompiling, disassembling, or reconstructing Atlas binaries, protocols, or server infrastructure
-- Tampering with, bypassing, or disabling any authentication or anti-tamper control
-- Probing or interfering with Atlas servers or databases
-- Using knowledge of Atlas internals to build competing platforms or bypass tools
+**Not permitted, under any circumstance, without Atlas's prior written consent:**
+- Reverse engineering, decompiling, disassembling, or otherwise deriving source code, protocols, or algorithms from Atlas binaries, clients, or infrastructure
+- Circumventing, disabling, or interfering with any authentication or anti-tamper mechanism
+- Accessing, probing, or testing Atlas servers, databases, or infrastructure outside normal SDK operation
+- Using knowledge of Atlas internals to build, assist, or distribute a competing product or a bypass tool
 
-Enforcement: Saudi Arabia Anti-Cybercrime Law (Royal Decree M/17, 1428H, Articles 3–4); U.S. Computer Fraud and Abuse Act (18 U.S.C. § 1030); EU Directive 2013/40/EU; WIPO / TRIPS (180+ signatory nations).
+A violation terminates this license the moment it occurs. No warning. No cure period.
 
-Atlas monitors for unauthorized access, reverse engineering, and protocol analysis. Violations are met with civil action, referral to competent authorities, and pursuit of all available remedies — injunctive relief, asset recovery, and cross-jurisdiction enforcement — without prior notice.
+This agreement is governed by the laws of the Kingdom of Saudi Arabia, including the Anti-Cyber Crime Law (Royal Decree No. M/17, 1428H), Articles 3 and 5. Unauthorized access to Atlas infrastructure is independently a criminal matter in most jurisdictions Atlas operates in, including under the U.S. Computer Fraud and Abuse Act (18 U.S.C. § 1030) and EU Directive 2013/40/EU. Atlas is not confined to one jurisdiction's remedies and will pursue violators wherever they are found.
 
-Permission requests and inquiries: [mail@atlassecurity.site](mailto:mail@atlassecurity.site) · [atlassecurity.site/legal](https://atlassecurity.site/legal)
+Atlas monitors for unauthorized access and reverse-engineering activity as a matter of course. Confirmed violations are referred for civil action, criminal referral where warranted, and pursuit of injunctive relief, damages, and cross-border enforcement — without prior notice.
+
+All rights not expressly granted are reserved.
+
+Authorized inquiries only: [mail@atlassecurity.site](mailto:mail@atlassecurity.site) · [atlassecurity.site/legal](https://atlassecurity.site/legal)
