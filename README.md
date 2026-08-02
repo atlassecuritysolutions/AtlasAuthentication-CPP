@@ -406,7 +406,7 @@ Each entry in `logs\` is a complete record of one event:
 
 ```
 [Atlas Exit Report]
-Time:   2026-08-02 8:08:50
+Time:   2026-08-02 8:20:50
 Reason: CheckAuthentication: not authenticated or no session
 File:   Atlas Auth.cpp
 Line:   2258
