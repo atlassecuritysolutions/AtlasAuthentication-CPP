@@ -1,4 +1,4 @@
-// Atlas SDK — ImGui example (Dear ImGui + DirectX 11).
+// Atlas SDK - ImGui example (Dear ImGui + DirectX 11).
 //
 //   Dashboard: https://atlassecurity.site/dashboard
 //   Docs:      https://atlassecurity.site/docs
@@ -69,7 +69,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // -- App state ------------------------------------------------------------
 enum class Screen   { Login, Verify, Welcome };
-// Auth mode segments on the Login screen — matches the Console example so
+// Auth mode segments on the Login screen - matches the Console example so
 // users can test every path Atlas supports from any of the four examples.
 enum class AuthMode { License, User, Register };
 // Which flow the pending 8-digit code belongs to. Verify screen renders the
@@ -84,17 +84,17 @@ static char       g_passwordBuf[136] = "";
 static char       g_regUserBuf [96]  = "";
 static char       g_regPassBuf [136] = "";
 static char       g_regEmailBuf[128] = "";
-// Verify screen state — the 8-digit code + any masked email / IP / country
+// Verify screen state - the 8-digit code + any masked email / IP / country
 // the server sent back with the challenge (empty on the register path).
 static char        g_verifyCodeBuf[16] = "";
 static std::string g_verifyMaskedEmail;
 static std::string g_verifySignInIp;
 static std::string g_verifySignInCountry;
-// Register-path credential stash — so the sign-in that follows email confirm
+// Register-path credential stash - so the sign-in that follows email confirm
 // uses the same values without asking the user again.
 static std::string g_pendingRegUser;
 static std::string g_pendingRegPass;
-// Change-password state (Welcome screen — only shown for user-mode sessions)
+// Change-password state (Welcome screen - only shown for user-mode sessions)
 static bool     g_showChangePw = false;
 static char     g_oldPwBuf[136] = "";
 static char     g_newPwBuf[136] = "";
@@ -253,7 +253,7 @@ static void Hyperlink(const char* label, const char* url) {
     }
 }
 
-// Fetch user info after successful login. Works for every auth mode — the SDK
+// Fetch user info after successful login. Works for every auth mode - the SDK
 // resolves the license/username itself; passing a hint is optional.
 static void FetchWelcomeInfo() {
     g_info.license  = Atlas::Data::GetLicense();
@@ -316,7 +316,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                 : "Your license is checked against the Atlas server, tied to this machine's hardware, and re-verified every five seconds while the program runs.");
             ImGui::PopTextWrapPos();
 
-            // -- Mode picker — 3 pill buttons acting as a segmented control ----
+            // -- Mode picker - 3 pill buttons acting as a segmented control ----
             ImGui::Dummy(ImVec2(0, 20));
             const float segW = (formW - 12.f) / 3.f;
             const char* segLabels[3] = { "License key", "User login", "Register" };
@@ -360,7 +360,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                 ImGui::Dummy(ImVec2(0, 4));
                 ImGui::InputTextWithHint("##regpw", "\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2", g_regPassBuf, sizeof(g_regPassBuf), ImGuiInputTextFlags_Password);
                 ImGui::Dummy(ImVec2(0, 12));
-                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "EMAIL (OPTIONAL — UNLOCKS PASSWORD RESET)"); ImGui::PopFont();
+                ImGui::PushFont(g_FontEyebrow); TextC(COL_FAINT, "EMAIL (OPTIONAL - UNLOCKS PASSWORD RESET)"); ImGui::PopFont();
                 ImGui::Dummy(ImVec2(0, 4));
                 ImGui::InputTextWithHint("##regemail", "you@example.com", g_regEmailBuf, sizeof(g_regEmailBuf));
                 commitLabel = "Create account";
@@ -382,7 +382,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                 }
                 else if (g_mode == AuthMode::User) {
                     // ================================================================
-                    // ACCOUNT SIGN-IN — headless flow. account.Login() reports a
+                    // ACCOUNT SIGN-IN - headless flow. account.Login() reports a
                     // status; on NeedsVerification we move to the Verify screen and
                     // let the user type the 8-digit code we just emailed them.
                     //
@@ -391,7 +391,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                     //
                     //     ok = Atlas::Account::Dialog::Login(g_usernameBuf, g_passwordBuf);
                     //
-                    // — the built-in Win32 verify dialog pops over the ImGui window,
+                    // - the built-in Win32 verify dialog pops over the ImGui window,
                     // runs the code prompt, and closes when the session is live.
                     // ================================================================
                     if (g_usernameBuf[0] == '\0' || g_passwordBuf[0] == '\0') {
@@ -415,7 +415,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                 }
                 else { // Register
                     // ================================================================
-                    // REGISTER — create the account, confirm the email if supplied,
+                    // REGISTER - create the account, confirm the email if supplied,
                     // then sign in. Register alone does NOT open a session.
                     //
                     // You can replace this entire branch (and the Verify screen
@@ -423,7 +423,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                     //
                     //     Atlas::Account::Dialog::Register();
                     //
-                    // — the built-in Win32 register dialog collects credentials,
+                    // - the built-in Win32 register dialog collects credentials,
                     // opens the email-confirmation dialog automatically when an
                     // email was supplied, and reports success.
                     // ================================================================
@@ -479,7 +479,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
             }
         }
         else if (g_screen == Screen::Verify) {
-            // -- Verify screen — 8-digit code, in-app. Same shape for both a
+            // -- Verify screen - 8-digit code, in-app. Same shape for both a
             // sign-in verification and a registration email-confirm; the copy
             // + the submit call are the only differences.
             const bool isConfirm = g_verifyKind == VerifyKind::EmailConfirm;
@@ -562,7 +562,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                 }
             }
 
-            // Resend link (sign-in flow only — register-confirm has no server-side resend).
+            // Resend link (sign-in flow only - register-confirm has no server-side resend).
             if (!isConfirm) {
                 ImGui::Dummy(ImVec2(0, 6));
                 ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0,0,0,0));
@@ -578,7 +578,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                 ImGui::PopStyleColor(4);
             }
 
-            // Cancel — back to the credentials screen.
+            // Cancel - back to the credentials screen.
             ImGui::Dummy(ImVec2(0, 2));
             ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0,0,0,0));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, COL_RAISED);
@@ -609,7 +609,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
 
             ImGui::Dummy(ImVec2(0, 20));
 
-            // Info card — cell values built here so we can format the numeric
+            // Info card - cell values built here so we can format the numeric
             // level with printf and skip the Username row on license-only sessions.
             char levelBuf[16]; snprintf(levelBuf, sizeof(levelBuf), "%d", g_info.level);
             struct Row { const char* k; std::string v; };
@@ -676,7 +676,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
                     g_licenseBuf[0] = '\0';
                 }
             }
-            // Change password — visible only when signed in as a password account
+            // Change password - visible only when signed in as a password account
             // (GetUsername() returns non-empty). License-only sessions can't change
             // anything so we hide the affordance.
             if (!g_info.username.empty()) {
@@ -728,7 +728,7 @@ static void RenderAtlasWindow(const ImGuiIO& io) {
         ImGui::EndChild();     // form_col
         ImGui::PopStyleColor(); // form_col ChildBg
 
-        // Website link — big, obvious, blue. This is the app footer: users
+        // Website link - big, obvious, blue. This is the app footer: users
         // should always know where the real product lives.
         const float linkH = 30.f;
         ImGui::SetCursorPos(ImVec2(formX, totalH - padY - linkH));

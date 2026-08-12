@@ -1,4 +1,4 @@
-// Atlas SDK — Console example (C++).
+// Atlas SDK - Console example (C++).
 // Build Release / x64. Set your API key in Atlas.h (Atlas::API_KEY = "...").
 //
 //   Dashboard: https://atlassecurity.site/dashboard
@@ -33,7 +33,7 @@ int main()
     }
     else if (choice == "2") {
         // ================================================================
-        // ACCOUNT SIGN-IN - headless flow, every prompt rendered inline.
+        // ACCOUNT SIGN-IN - regular flow, every prompt rendered inline.
         //
         // account.Login() returns a status. On NeedsVerification the server
         // emailed an 8-digit code; the SDK is holding the challenge until
@@ -133,7 +133,7 @@ int main()
     // right now" check on demand (e.g. before performing a sensitive
     // action). We skip it in this example because the SDK's own heartbeat
     // is authoritative.
-    // On account sessions GetLicense() returns a synthetic "user:<name>" —
+    // On account sessions GetLicense() returns a synthetic "user:<name>" -
     // hide it and print Username instead. On license-only sessions Username
     // is empty and License is the real key.
     std::cout << "\n--- User Information ---\n";

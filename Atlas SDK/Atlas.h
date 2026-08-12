@@ -11,7 +11,7 @@
 //   Atlas::Startup();
 //   if (Atlas::License::Login("license-key")) { /* signed in */ }
 //
-// Namespace layout — pick the right bucket for the job:
+// Namespace layout - pick the right bucket for the job:
 //
 //   Atlas::                       shared/session (Data, Network, Variables, Webhook)
 //   Atlas::License::              license-key sign-in (headless)
@@ -21,7 +21,7 @@
 //   Atlas::Dialog::               non-auth dialogs (fatal error, etc.)
 //
 // Anything inside a `Dialog::` namespace opens a modal Win32 window and blocks
-// until the user closes it. Anything outside is pure API — never opens UI.
+// until the user closes it. Anything outside is pure API - never opens UI.
 
 
 namespace Atlas {
@@ -54,7 +54,7 @@ namespace Atlas {
         bool Login(const std::string& username, const std::string& password);
 
         // Bind a license key to a new username/password (legacy REG mode).
-        // Does NOT sign in on success — call Login(u, p) after.
+        // Does NOT sign in on success - call Login(u, p) after.
         bool Register(const std::string& license_key, const std::string& username, const std::string& password);
 
 
@@ -79,7 +79,7 @@ namespace Atlas {
         struct LoginResult;
 
         // Sign in with account credentials. Check result.status.
-        // On NeedsVerification the SDK holds the challenge — call SubmitVerification(code).
+        // On NeedsVerification the SDK holds the challenge - call SubmitVerification(code).
         LoginResult Login(const std::string& username, const std::string& password);
 
         // Create a standalone account. Email optional but needed for password reset.
@@ -102,7 +102,7 @@ namespace Atlas {
         bool Redeem(const std::string& license_key);
 
         // Start a password reset. identifier = username or email.
-        // Always returns true — anti-enumeration, the server never leaks whether it matched.
+        // Always returns true - anti-enumeration, the server never leaks whether it matched.
         bool RequestPasswordReset(const std::string& identifier);
 
         // Complete the reset with the emailed code + new password.
@@ -143,11 +143,11 @@ namespace Atlas {
         enum class Theme { Dark, Light };
 
         inline std::string AppName = "Atlas";           // Shown in every dialog title bar.
-        inline Theme       theme   = Theme::Dark;       // Active theme.
-        inline HWND        parent  = nullptr;           // Modal parent, null = foreground window.
+        inline Theme       theme = Theme::Dark;       // Active theme.
+        inline HWND        parent = nullptr;           // Modal parent, null = foreground window.
 
-        struct Accents;                                 // Colour overrides — defined at bottom.
-        struct Copy;                                    // String overrides — defined at bottom.
+        struct Accents;                                 // Colour overrides - defined at bottom.
+        struct Copy;                                    // String overrides - defined at bottom.
 
         // Unrecoverable-error dialog with a Copy Details button. Informational.
         void FatalError(const std::string& title, const std::string& body, const std::string& error_code = "");
@@ -235,7 +235,7 @@ namespace Atlas {
         bool SendDiscord(const std::string& webhook_url, const std::string& message);
         // Discord embed. color is 0xRRGGBB.
         bool SendDiscordEmbed(const std::string& webhook_url, const std::string& title, const std::string& description, int color = 0x3498db);
-        // POST an arbitrary JSON payload — Slack, custom endpoints, telemetry.
+        // POST an arbitrary JSON payload - Slack, custom endpoints, telemetry.
         bool Send(const std::string& url, const std::string& json_payload);
     }
 
@@ -249,36 +249,36 @@ namespace Atlas {
         // Setting `panel` also auto-derives raised/raisedHover/lineSoft so a single override stays coherent.
         //   Atlas::Dialog::accents.signal = 0xFFE04A2C;   // orange primary
         struct Accents {
-            unsigned int signal     = 0;    // Primary CTA + focus rings.
-            unsigned int panel      = 0;    // Dialog surface.
-            unsigned int ink        = 0;    // Caption bar / dark backing.
-            unsigned int hi_text    = 0;    // Primary text.
-            unsigned int lo_text    = 0;    // Secondary text.
+            unsigned int signal = 0;    // Primary CTA + focus rings.
+            unsigned int panel = 0;    // Dialog surface.
+            unsigned int ink = 0;    // Caption bar / dark backing.
+            unsigned int hi_text = 0;    // Primary text.
+            unsigned int lo_text = 0;    // Secondary text.
             unsigned int faint_text = 0;    // Labels / hints.
-            unsigned int line       = 0;    // Hairline borders.
-            unsigned int alert      = 0;    // Errors + destructive.
-            unsigned int ok         = 0;    // Success + verified.
+            unsigned int line = 0;    // Hairline borders.
+            unsigned int alert = 0;    // Errors + destructive.
+            unsigned int ok = 0;    // Success + verified.
         };
         inline Accents accents{};
 
-        // User-facing string overrides. "" keeps the built-in default —
+        // User-facing string overrides. "" keeps the built-in default -
         // every field is pre-initialised to "" so you only touch what you
         // want to change (no need to write = "" yourself for the rest).
         //   Atlas::Dialog::copy.verify_title = "Enter code";
         struct Copy {
-            std::string verify_title           = "";    // Verify dialog: hero title.
-            std::string verify_prompt_prefix   = "";    // Verify dialog: text before the masked email.
+            std::string verify_title = "";    // Verify dialog: hero title.
+            std::string verify_prompt_prefix = "";    // Verify dialog: text before the masked email.
             std::string verify_prompt_fallback = "";    // Verify dialog: prompt when no masked email.
-            std::string verify_button_verify   = "";    // Verify dialog: primary button.
-            std::string verify_button_cancel   = "";    // Verify dialog: secondary button.
-            std::string verify_button_resend   = "";    // Verify dialog: resend link.
-            std::string verify_footer_note     = "";    // Verify dialog: footer attribution.
-            std::string confirm_title          = "";    // Confirm-email dialog: hero title.
-            std::string confirm_prompt_prefix  = "";    // Confirm-email dialog: text before the email.
-            std::string confirm_prompt_fallback= "";    // Confirm-email dialog: prompt when no email.
-            std::string login_title            = "";    // Login dialog: hero title.
-            std::string register_title         = "";    // Register dialog: hero title.
-            std::string reset_title            = "";    // Reset dialogs: hero title.
+            std::string verify_button_verify = "";    // Verify dialog: primary button.
+            std::string verify_button_cancel = "";    // Verify dialog: secondary button.
+            std::string verify_button_resend = "";    // Verify dialog: resend link.
+            std::string verify_footer_note = "";    // Verify dialog: footer attribution.
+            std::string confirm_title = "";    // Confirm-email dialog: hero title.
+            std::string confirm_prompt_prefix = "";    // Confirm-email dialog: text before the email.
+            std::string confirm_prompt_fallback = "";    // Confirm-email dialog: prompt when no email.
+            std::string login_title = "";    // Login dialog: hero title.
+            std::string register_title = "";    // Register dialog: hero title.
+            std::string reset_title = "";    // Reset dialogs: hero title.
         };
         inline Copy copy{};
     }
@@ -287,13 +287,13 @@ namespace Atlas {
         // Return from Atlas::Account::Login. Always check `status` first.
         struct LoginResult {
             enum class Status {
-                Ok,                 // Signed in — session is live.
+                Ok,                 // Signed in - session is live.
                 WrongCredentials,   // Bad username/password.
-                NeedsVerification,  // Server sent a code — call SubmitVerification.
+                NeedsVerification,  // Server sent a code - call SubmitVerification.
                 Banned,             // Account is banned.
                 AccountPaused,      // Account is paused by the seller.
                 ServerUnreachable,  // Network / DNS failure.
-                Error,              // Anything else — check error_message.
+                Error,              // Anything else - check error_message.
             };
             Status      status = Status::Error;
             std::string error_message;      // Human-readable reason on any non-Ok status.
