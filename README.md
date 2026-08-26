@@ -157,7 +157,7 @@ ImGui Example/imgui/
 
 Reuse the API key you already set in `Atlas SDK/Atlas.h`. Open the `.sln`, build **Release · x64**, run with `Ctrl+F5`. A login window appears; sign in and you land on a welcome screen with a session card and **Sign out** / **Recheck session** buttons.
 
-Fonts, styling, backend detail: [`ImGui Example/README.md`](ImGui%20Example/README.md).
+Fonts, styling, and backend detail: see the vendored Dear ImGui docs at `ImGui Example/imgui/docs/` and the build configuration in `Atlas Auth ImGui Example.vcxproj` (DX11 + Win32 backends, vendored `imgui/` source tree).
 
 ---
 
@@ -267,7 +267,7 @@ Atlas::Account::Dialog::ResetPassword();
 
 `LoginResult::Status` is one of `Ok`, `WrongCredentials`, `NeedsVerification`, `Banned`, `AccountPaused`, `ServerUnreachable`, `Error`.
 
-- On `Ok` - `r.expiry`, `r.level`, `r.note` are populated.
+- On `Ok` - `r.user_id`, `r.expiry`, `r.level`, `r.note` are populated.
 - On `NeedsVerification` - the server emailed an 8-digit code; pass it to `SubmitVerification`. `r.masked_email`, `r.sign_in_ip`, `r.sign_in_country` are populated so you can render something like "we sent a code to a•••@example.com from Riyadh."
 
 ### `Atlas::Data`
@@ -276,7 +276,7 @@ Session state, valid once `Login` succeeds.
 
 ```cpp
 // Identity
-GetLicense()  GetUsername()  GetEmail()  GetIP()  GetHWID()  GetDevice()
+GetLicense()  GetUsername()  GetEmail()  GetPassword()  GetIP()  GetHWID()  GetDevice()
 GetNote()  GetUserId()  GetLevel()
 GetFirstSeenDate()  GetLastSeenDate()
 
