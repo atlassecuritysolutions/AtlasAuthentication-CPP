@@ -125,17 +125,6 @@ int main()
     }
 
     // Session data - every field is populated the moment authed is true.
-    // GetUsername() is empty on license-only sessions.
-    //
-    // Note: the SDK's heartbeat thread validates the session every 3-7s on
-    // its own. Calling Atlas::Network::CheckAuthentication() here is only
-    // needed if your app wants a synchronous "is my session still valid
-    // right now" check on demand (e.g. before performing a sensitive
-    // action). We skip it in this example because the SDK's own heartbeat
-    // is authoritative.
-    // On account sessions GetLicense() returns a synthetic "user:<name>" -
-    // hide it and print Username instead. On license-only sessions Username
-    // is empty and License is the real key.
     std::cout << "\n--- User Information ---\n";
     const bool is_account = !Atlas::Data::GetUsername().empty();
     if (is_account)
