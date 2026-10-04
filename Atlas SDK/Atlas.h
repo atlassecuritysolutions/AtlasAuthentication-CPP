@@ -4,284 +4,229 @@
 #include <vector>
 #include <cstdint>
 
-// Atlas authentication library.
-// Get your API key from atlassecurity.site/dashboard.
+// Atlas authentication library for Windows x64.
+// Reference: https://atlassecurity.site/docs?p=sdk/overview
 //
-//   Atlas::API_KEY = "YOUR_API_KEY";
-//   Atlas::Startup();
-//   if (Atlas::License::Login("license-key")) { /* signed in */ }
+//   Atlas::API_KEY = "YOUR_API_KEY";           // Dashboard > Applications. Set before Startup().
+//   Atlas::Startup();                          // Once, first.
+//   if (!Atlas::License::Login("key"))         // Any call that can fail returns false or an empty value.
+//       puts(Atlas::Data::GetErrorMessage().c_str());   // This says why.
 //
-// Namespace layout - pick the right bucket for the job:
-//
-//   Atlas::                       shared/session (Data, Network, Variables, Webhook)
-//   Atlas::License::              license-key sign-in (headless)
-//   Atlas::License::Dialog::      license-key sign-in with built-in Win32 UI
-//   Atlas::Account::              username+password + email flow (headless)
-//   Atlas::Account::Dialog::      username+password + email flow with built-in Win32 UI
-//   Atlas::Dialog::               non-auth dialogs (fatal error, etc.)
-//
-// Anything inside a `Dialog::` namespace opens a modal Win32 window and blocks
-// until the user closes it. Anything outside is pure API - never opens UI.
+// Anything inside a Dialog:: namespace opens a window and waits for the user. Everything else never shows UI.
 
 
 namespace Atlas {
 
-    // Your app's API key. Get it from atlassecurity.site/dashboard.
+    // Your app's API key. Set it before Startup().
     inline std::string API_KEY = "YOUR_API_KEY";
 
 
     // -- Session lifecycle ---------------------------------------------------
+    // Startup() once, first. Logout() ends the session; the library stays loaded. Exit() kills the process, no cleanup.
+    // https://atlassecurity.site/docs?p=sdk/lifecycle
 
-    // Initialise the library. Call once at the top of main().
     void Startup();
-
-    // Terminate the session and clear all authentication state.
     void Logout();
-
-    // Hard-kill the process via __fastfail. Uncatchable, no cleanup.
     void Exit();
 
 
-    // -- License mode --------------------------------------------------------
-    // Classic single-user, license-key auth. No email, no verify code.
+    // -- License -------------------------------------------------------------
+    // Sign in with a license key. The first sign-in locks the key to this PC.
+    // Login(username, password) and Register() are only for a license that carries its own username and password.
+    // For real user accounts use Account.
+    // https://atlassecurity.site/docs?p=sdk/license
 
     namespace License {
-        // License-key sign-in.
         bool Login(const std::string& license_key);
-
-        // Username + password sign-in for a license bound to one user (legacy USR mode).
-        // For the multi-user flow with email verify, use Atlas::Account::Login.
         bool Login(const std::string& username, const std::string& password);
-
-        // Bind a license key to a new username/password (legacy REG mode).
-        // Does NOT sign in on success - call Login(u, p) after.
         bool Register(const std::string& license_key, const std::string& username, const std::string& password);
 
-
-        // Built-in Win32 dialogs for the license flow. Each function opens a
-        // modal window and blocks until the user closes it.
+        // Built-in windows. Each blocks until the user closes it.
         namespace Dialog {
-            // Prompt for a license key, then sign in.
             bool Login();
-
-            // Prompt for license + username + password, then bind them.
             bool Register();
         }
     }
 
 
-    // -- Account mode --------------------------------------------------------
-    // Multi-user (username / password / email) accounts with email verify,
-    // password reset, and the redeem-a-key-onto-my-account flow.
+    // -- Account -------------------------------------------------------------
+    // Username and password accounts, with optional email verification and password reset.
+    // Login() returns a LoginResult: read result.status first. NeedsVerification means an 8-digit code was emailed,
+    // so call SubmitVerification(code). Register() does not sign in.
+    // https://atlassecurity.site/docs?p=sdk/account
 
     namespace Account {
-        // Full return shape defined at the bottom of this file.
-        struct LoginResult;
+        struct LoginResult;     // Defined at the bottom of this file.
 
-        // Sign in with account credentials. Check result.status.
-        // On NeedsVerification the SDK holds the challenge - call SubmitVerification(code).
         LoginResult Login(const std::string& username, const std::string& password);
-
-        // Create a standalone account. Email optional but needed for password reset.
-        // Does NOT sign in. If email is set, account stays unverified until ConfirmEmail.
         bool Register(const std::string& username, const std::string& password, const std::string& email = "");
-
-        // Submit the 8-digit code for the pending sign-in verify challenge.
         bool SubmitVerification(const std::string& eight_digit_code);
-
-        // Resend the sign-in verification code (60s server-side cooldown).
         bool ResendVerification();
-
-        // Confirm a newly-registered account's email with the emailed code.
         bool ConfirmEmail(const std::string& eight_digit_code);
-
-        // True while a registration email-confirm is pending.
         bool HasPendingEmailConfirm();
-
-        // Redeem a license key onto the currently signed-in account.
         bool Redeem(const std::string& license_key);
-
-        // Start a password reset. identifier = username or email.
-        // Always returns true - anti-enumeration, the server never leaks whether it matched.
         bool RequestPasswordReset(const std::string& identifier);
-
-        // Complete the reset with the emailed code + new password.
         bool CompletePasswordReset(const std::string& eight_digit_code, const std::string& new_password);
 
-
-        // Built-in Win32 dialogs for the account flow. Each function opens a
-        // modal window and blocks until the user closes it.
+        // Built-in windows. Each blocks until the user closes it.
         namespace Dialog {
-            // Full sign-in flow: creds dialog → sign in → verify dialog if needed.
             bool Login();
-
-            // Creds pre-collected. Opens the verify dialog if the server requires it.
             bool Login(const std::string& username, const std::string& password);
-
-            // Register dialog → create account. When registered with an email,
-            // the confirm-code dialog opens automatically.
             bool Register();
-
-            // 8-digit code dialog for the pending sign-in verify challenge.
             bool VerifyCode();
-
-            // 8-digit code dialog for the pending registration email-confirm.
             bool ConfirmEmail();
-
-            // Full password-reset flow: request-code dialog → email → complete-reset dialog.
             bool ResetPassword();
         }
     }
 
 
-    // -- Non-auth dialogs ----------------------------------------------------
-    // Reusable Win32 dialogs unrelated to a specific auth flow. Global theme
-    // and per-dialog customisation live in the Dialog namespace too (see below).
+    // -- Dialog --------------------------------------------------------------
+    // Theme, text and colour overrides for the built-in windows, plus FatalError. The sign-in windows are
+    // License::Dialog and Account::Dialog.
+    // https://atlassecurity.site/docs?p=sdk/dialog
 
     namespace Dialog {
-        // Palette theme. Dark matches the Atlas dashboard.
         enum class Theme { Dark, Light };
 
-        inline std::string AppName = "Atlas";           // Shown in every dialog title bar.
-        inline Theme       theme = Theme::Dark;       // Active theme.
-        inline HWND        parent = nullptr;           // Modal parent, null = foreground window.
+        inline std::string AppName = "Atlas";       // Title bar text of every window.
+        inline Theme       theme = Theme::Dark;
+        inline HWND        parent = nullptr;        // nullptr = the foreground window.
 
-        struct Accents;                                 // Colour overrides - defined at bottom.
-        struct Copy;                                    // String overrides - defined at bottom.
+        // Colour overrides, 0xAARRGGBB (alpha ignored). A field left at 0 keeps the theme colour.
+        // Setting panel also derives raised, raisedHover and lineSoft.
+        //   Atlas::Dialog::accents.signal = 0xFFE04A2C;
+        struct Accents {
+            unsigned int signal     = 0;    // Primary button and focus rings.
+            unsigned int panel      = 0;    // Window surface.
+            unsigned int ink        = 0;    // Caption bar and dark backing.
+            unsigned int hi_text    = 0;    // Primary text.
+            unsigned int lo_text    = 0;    // Secondary text.
+            unsigned int faint_text = 0;    // Labels and hints.
+            unsigned int line       = 0;    // Hairline borders.
+            unsigned int alert      = 0;    // Errors and destructive actions.
+            unsigned int ok         = 0;    // Success and verified.
+        };
+        inline Accents accents{};
 
-        // Unrecoverable-error dialog with a Copy Details button. Informational.
+        // Text overrides. "" keeps the built-in text, so set only what you want to change.
+        //   Atlas::Dialog::copy.verify_title = "Enter code";
+        struct Copy {
+            std::string verify_title           = "";    // Verify window: title.
+            std::string verify_prompt_prefix   = "";    // Verify window: text before the masked email.
+            std::string verify_prompt_fallback = "";    // Verify window: prompt when there is no masked email.
+            std::string verify_button_verify   = "";    // Verify window: main button.
+            std::string verify_button_cancel   = "";    // Verify window: cancel button.
+            std::string verify_button_resend   = "";    // Verify window: resend link.
+            std::string verify_footer_note     = "";    // Verify window: footer line.
+            std::string confirm_title          = "";    // Confirm-email window: title.
+            std::string confirm_prompt_prefix  = "";    // Confirm-email window: text before the email.
+            std::string confirm_prompt_fallback = "";   // Confirm-email window: prompt when there is no email.
+            std::string login_title            = "";    // Login window: title.
+            std::string register_title         = "";    // Register window: title.
+            std::string reset_title            = "";    // Password-reset windows: title.
+        };
+        inline Copy copy{};
+
         void FatalError(const std::string& title, const std::string& body, const std::string& error_code = "");
     }
 
 
     // -- Network -------------------------------------------------------------
-    // Direct server RPCs on the current session.
+    // Ask the server something during a session. The library already checks the session in the background,
+    // so CheckAuthentication() is only for right before a sensitive action.
+    // https://atlassecurity.site/docs?p=sdk/network
 
     namespace Network {
-        // Poll the server to confirm the current session is still valid.
         bool CheckAuthentication();
-
-        // Fetch a dashboard-uploaded file by id. Empty vector on failure.
         std::vector<uint8_t> Download(int file_id);
-
-        // Ban the current user from your app. duration_minutes = 0 → permanent.
         bool BanUser(const std::string& reason, int duration_minutes);
-
-        // Emit a custom log line (max 512 chars) to the dashboard's Logs tab.
         bool SubmitLog(const char* log_text);
-
-        // Change the current account's password.
         bool ChangePassword(const std::string& old_password, const std::string& new_password);
-
-        // Round-trip latency to the auth server in ms, or -1 if unreachable.
         int Ping();
     }
 
 
     // -- Data ----------------------------------------------------------------
-    // Read-only session accessors. Populated after a successful sign-in.
+    // Facts about the signed-in session. Valid only after a successful sign-in.
+    // A getter with nothing to return gives "" or 0. GetDaysRemaining() is the exception: -1 means no expiry,
+    // 0 means expired or under 24 hours left. GetExpiry() is "DD-MM-YYYY" or "Never".
+    // https://atlassecurity.site/docs?p=sdk/data
 
     namespace Data {
-        //Authentication Data
-        std::string GetLicense();                       // License key the session opened with.
-        std::string GetUsername();                      // Account username, "" on license-only sessions.
-        std::string GetEmail();                         // Account email, "" if none / license-only.
-        std::string GetPassword();                      // Password used at sign-in, "" on license-only.
-        std::string GetIP();                            // Server-detected client IP.
-        std::string GetHWID();                          // Hardware fingerprint.
-        std::string GetDevice();                        // ComputerName / Windows username.
-        std::string GetNote();                          // Admin-set note, "" if none.
-        std::string GetFirstSeenDate();                 // First-ever authentication timestamp.
-        std::string GetLastSeenDate();                  // Most recent authentication timestamp.
-        int         GetUserId();                        // Account row id, 0 if signed out.
-        int         GetLevel();                         // Access level, 0 if unknown.
+        // Identity
+        std::string GetLicense();
+        std::string GetUsername();
+        std::string GetEmail();
+        std::string GetPassword();
+        std::string GetIP();
+        std::string GetHWID();
+        std::string GetDevice();
+        std::string GetNote();
+        std::string GetFirstSeenDate();
+        std::string GetLastSeenDate();
+        int         GetUserId();
+        int         GetLevel();
 
-        //Expiry
-        std::string GetExpiry();                        // "DD-MM-YYYY HH:MM:SS" or "Lifetime".
-        int         GetDaysRemaining();                 // -1 = lifetime, 0 = expired.
-        bool        IsLifetime();                       // True if the license never expires.
-        bool        IsExpiringSoon(int days_threshold = 7); // True if expiring within days_threshold.
+        // Expiry
+        std::string GetExpiry();
+        int         GetDaysRemaining();
+        bool        IsLifetime();
+        bool        IsExpiringSoon(int days_threshold = 7);
 
-        //Authentication Verdicts
-        bool        IsAuthenticated();                  // True if a live session is open.
-        bool        IsBanned();                         // True if the current user is banned.
+        // Status
+        bool        IsAuthenticated();
+        bool        IsBanned();
 
-        //Global Application Stats
-        std::string GetActiveUserCount();               // Users currently authenticated app-wide.
-        std::string GetUserCount();                     // Total registered users.
+        // App-wide counts
+        std::string GetActiveUserCount();
+        std::string GetUserCount();
 
-        //Atlas Errors
-        std::string GetErrorMessage();                  // Last error message, "" if none.
-        void        ClearError();                       // Reset the error state.
-        bool        HasError();                         // True if the last call set an error.
+        // Errors
+        std::string GetErrorMessage();
+        void        ClearError();
+        bool        HasError();
     }
 
 
     // -- Variables -----------------------------------------------------------
-    // Read-only key/value store you configure on the dashboard.
+    // Values you set on the dashboard, read while the app runs. Change one without shipping a new build.
+    // A key that does not exist gives "" (Fetch), 0 (FetchInt) or false (FetchBool).
+    // https://atlassecurity.site/docs?p=sdk/variables
 
     namespace Variables {
-        std::string Fetch(const std::string& key); // "" if the key doesn't exist.
-        bool FetchBool(const std::string& key); // "true" / "1" / "yes" → true; else false.
-        int FetchInt(const std::string& key);  // 0 if missing or unparseable.
+        std::string Fetch(const std::string& key);
+        bool        FetchBool(const std::string& key);
+        int         FetchInt(const std::string& key);
+    }
+
+
+    // -- Entitlements --------------------------------------------------------
+    // What this license or account may do: the features and credits you create on the dashboard.
+    // Has() and Remaining() are for showing and hiding. Only Consume() is enforced by the server.
+    // https://atlassecurity.site/docs?p=sdk/entitlements
+
+    namespace Entitlements {
+        bool                     Has(const std::string& key);
+        long long                Remaining(const std::string& key);
+        bool                     Consume(const std::string& key, int amount = 1);
+        std::vector<std::string> List();
+        bool                     Refresh();
     }
 
 
     // -- Webhook -------------------------------------------------------------
-    // Fire-and-forget HTTP POSTs (Discord, Slack, custom). Unrelated to Atlas auth.
+    // Send an HTTP POST from the client: Discord, Slack or your own endpoint. Unrelated to Atlas sign-in.
+    // https://atlassecurity.site/docs?p=sdk/webhook
 
     namespace Webhook {
-        // Plaintext Discord webhook message.
         bool SendDiscord(const std::string& webhook_url, const std::string& message);
-        // Discord embed. color is 0xRRGGBB.
         bool SendDiscordEmbed(const std::string& webhook_url, const std::string& title, const std::string& description, int color = 0x3498db);
-        // POST an arbitrary JSON payload - Slack, custom endpoints, telemetry.
         bool Send(const std::string& url, const std::string& json_payload);
     }
 
 
     // -- Types ---------------------------------------------------------------
-    // Struct definitions kept out of the API surface above so the function
-    // list reads fast. Just data shapes here.
-
-    namespace Dialog {
-        // Colour overrides. 0xAARRGGBB (alpha ignored). Fields at 0 keep the theme default.
-        // Setting `panel` also auto-derives raised/raisedHover/lineSoft so a single override stays coherent.
-        //   Atlas::Dialog::accents.signal = 0xFFE04A2C;   // orange primary
-        struct Accents {
-            unsigned int signal = 0;    // Primary CTA + focus rings.
-            unsigned int panel = 0;    // Dialog surface.
-            unsigned int ink = 0;    // Caption bar / dark backing.
-            unsigned int hi_text = 0;    // Primary text.
-            unsigned int lo_text = 0;    // Secondary text.
-            unsigned int faint_text = 0;    // Labels / hints.
-            unsigned int line = 0;    // Hairline borders.
-            unsigned int alert = 0;    // Errors + destructive.
-            unsigned int ok = 0;    // Success + verified.
-        };
-        inline Accents accents{};
-
-        // User-facing string overrides. "" keeps the built-in default -
-        // every field is pre-initialised to "" so you only touch what you
-        // want to change (no need to write = "" yourself for the rest).
-        //   Atlas::Dialog::copy.verify_title = "Enter code";
-        struct Copy {
-            std::string verify_title = "";    // Verify dialog: hero title.
-            std::string verify_prompt_prefix = "";    // Verify dialog: text before the masked email.
-            std::string verify_prompt_fallback = "";    // Verify dialog: prompt when no masked email.
-            std::string verify_button_verify = "";    // Verify dialog: primary button.
-            std::string verify_button_cancel = "";    // Verify dialog: secondary button.
-            std::string verify_button_resend = "";    // Verify dialog: resend link.
-            std::string verify_footer_note = "";    // Verify dialog: footer attribution.
-            std::string confirm_title = "";    // Confirm-email dialog: hero title.
-            std::string confirm_prompt_prefix = "";    // Confirm-email dialog: text before the email.
-            std::string confirm_prompt_fallback = "";    // Confirm-email dialog: prompt when no email.
-            std::string login_title = "";    // Login dialog: hero title.
-            std::string register_title = "";    // Register dialog: hero title.
-            std::string reset_title = "";    // Reset dialogs: hero title.
-        };
-        inline Copy copy{};
-    }
+    // The result type Account::Login returns.
 
     namespace Account {
         // Return from Atlas::Account::Login. Always check `status` first.
@@ -298,10 +243,10 @@ namespace Atlas {
             Status      status = Status::Error;
             std::string error_message;      // Human-readable reason on any non-Ok status.
             int         user_id = 0;        // Signed-in row id (Ok only).
-            std::string expiry;             // ISO-8601, "" = no expiry (Ok only).
+            std::string expiry;             // DD-MM-YYYY, "" = no expiry (Ok only).
             int         level = 1;          // Access level (Ok only).
             std::string note;               // Admin-set note (Ok only).
-            std::string masked_email;       // e.g. "ob...d@gmail.com" (NeedsVerification only).
+            std::string masked_email;       // e.g. "m...s@example.com" (NeedsVerification only).
             std::string sign_in_ip;         // Server-detected IP (NeedsVerification only).
             std::string sign_in_country;    // 2-letter ISO (NeedsVerification only).
         };
