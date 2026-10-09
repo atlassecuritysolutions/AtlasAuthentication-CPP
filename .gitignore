@@ -8,6 +8,8 @@ Release/
 DLL-Debug/
 DLL-Release/
 Ship-All/
+Atlas SDK/update.json
+Atlas SDK/update.json.sig
 
 *.zip
 
