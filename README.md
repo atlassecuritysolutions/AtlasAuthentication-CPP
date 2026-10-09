@@ -207,7 +207,7 @@ Atlas::Webhook::Send(url, json_payload);
 // Dialog theming (C++ only)
 Atlas::Dialog::AppName = "My App";  Atlas::Dialog::theme = Atlas::Dialog::Theme::Dark;
 Atlas::Dialog::parent = my_main_hwnd;  Atlas::Dialog::accents.signal = 0xFFE04A2C;
-Atlas::Dialog::copy.verify_title = "Enter code";
+Atlas::Dialog::AppDialogTitle = "Enter code";
 Atlas::Dialog::FatalError(title, body, error_code);
 ```
 
