@@ -309,7 +309,7 @@ File:   Atlas Auth.cpp
 Line:   2258
 ```
 
-> The rest of that folder is dev-only: `installed.flag`, `declined.flag`, `commit.sha` and `manage_autoupdate.bat`, which drive the MSBuild auto-update hook and appear only when a development environment is detected. End users only ever have `logs\` and, after a tamper trip, `pending_bans.dat`. Check `logs\` first whenever a process ends unexpectedly.
+> The rest of that folder is dev-only: `installed.flag`, `declined.flag`, `update.ps1`, `update.seq`, `update.log` and `manage_autoupdate.bat`, which drive the MSBuild auto-update hook and appear only when a development environment is detected. End users only ever have `logs\` and, after a tamper trip, `pending_bans.dat`. Check `logs\` first whenever a process ends unexpectedly.
 
 The reasons, with what causes each: [Diagnostic Logs](https://atlassecurity.site/docs?p=diagnostics/logs).
 
