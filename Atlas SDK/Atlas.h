@@ -12,7 +12,8 @@
 //   if (!Atlas::License::Login("key"))         // Any call that can fail returns false or an empty value.
 //       puts(Atlas::Data::GetErrorMessage().c_str());   // This says why.
 //
-// Anything inside a Dialog:: namespace opens a window and waits for the user. Everything else never shows UI.
+// Anything inside a Dialog:: namespace opens a window and waits for the user. The library itself only shows
+// timed message boxes (server notices and a few startup errors); Atlas::DisableMessageBoxes() turns them all off.
 
 
 namespace Atlas {
@@ -28,6 +29,11 @@ namespace Atlas {
     void Startup();
     void Logout();
     void Exit();
+
+    // Stops the library from opening any message box of its own: server notices, the wrong-API-key box and the
+    // update notice. Call it before Startup(). The reason for a refusal stays in Data::GetErrorMessage().
+    // The Dialog:: windows you call yourself still open.
+    void DisableMessageBoxes(bool disabled = true);
 
 
     // -- License -------------------------------------------------------------
