@@ -5,16 +5,7 @@
 #include <cstdint>
 
 // Atlas authentication library for Windows x64.
-// Reference: https://atlassecurity.site/docs?p=sdk/overview
-//
-//   Atlas::API_KEY = "YOUR_API_KEY";           // Dashboard > Applications. Set before Startup().
-//   Atlas::Startup();                          // Once, first.
-//   if (!Atlas::License::Login("key"))         // Any call that can fail returns false or an empty value.
-//       puts(Atlas::Data::GetErrorMessage().c_str());   // This says why.
-//
-// Anything inside a Dialog:: namespace opens a window and waits for the user. The library itself only shows
-// timed message boxes (server notices and a few startup errors); Atlas::DisableMessageBoxes() turns them all off.
-
+// Reference: https://atlassecurity.site/docs
 
 namespace Atlas {
 
@@ -83,57 +74,6 @@ namespace Atlas {
             bool ConfirmEmail();
             bool ResetPassword();
         }
-    }
-
-
-    // -- Dialog --------------------------------------------------------------
-    // Theme, text and colour overrides for the built-in windows, plus FatalError. The sign-in windows are
-    // License::Dialog and Account::Dialog.
-    // https://atlassecurity.site/docs?p=sdk/dialog
-
-    namespace Dialog {
-        enum class Theme { Dark, Light };
-
-        inline std::string AppName = "Atlas";       // Title bar text of every window.
-        inline Theme       theme = Theme::Dark;
-        inline HWND        parent = nullptr;        // nullptr = the foreground window.
-
-        // Colour overrides, 0xAARRGGBB (alpha ignored). A field left at 0 keeps the theme colour.
-        // Setting panel also derives raised, raisedHover and lineSoft.
-        //   Atlas::Dialog::accents.signal = 0xFFE04A2C;
-        struct Accents {
-            unsigned int signal     = 0;    // Primary button and focus rings.
-            unsigned int panel      = 0;    // Window surface.
-            unsigned int ink        = 0;    // Caption bar and dark backing.
-            unsigned int hi_text    = 0;    // Primary text.
-            unsigned int lo_text    = 0;    // Secondary text.
-            unsigned int faint_text = 0;    // Labels and hints.
-            unsigned int line       = 0;    // Hairline borders.
-            unsigned int alert      = 0;    // Errors and destructive actions.
-            unsigned int ok         = 0;    // Success and verified.
-        };
-        inline Accents accents{};
-
-        // Text overrides. "" keeps the built-in text, so set only what you want to change.
-        //   Atlas::Dialog::copy.verify_title = "Enter code";
-        struct Copy {
-            std::string verify_title           = "";    // Verify window: title.
-            std::string verify_prompt_prefix   = "";    // Verify window: text before the masked email.
-            std::string verify_prompt_fallback = "";    // Verify window: prompt when there is no masked email.
-            std::string verify_button_verify   = "";    // Verify window: main button.
-            std::string verify_button_cancel   = "";    // Verify window: cancel button.
-            std::string verify_button_resend   = "";    // Verify window: resend link.
-            std::string verify_footer_note     = "";    // Verify window: footer line.
-            std::string confirm_title          = "";    // Confirm-email window: title.
-            std::string confirm_prompt_prefix  = "";    // Confirm-email window: text before the email.
-            std::string confirm_prompt_fallback = "";   // Confirm-email window: prompt when there is no email.
-            std::string login_title            = "";    // Login window: title.
-            std::string register_title         = "";    // Register window: title.
-            std::string reset_title            = "";    // Password-reset windows: title.
-        };
-        inline Copy copy{};
-
-        void FatalError(const std::string& title, const std::string& body, const std::string& error_code = "");
     }
 
 
@@ -228,6 +168,39 @@ namespace Atlas {
         bool SendDiscord(const std::string& webhook_url, const std::string& message);
         bool SendDiscordEmbed(const std::string& webhook_url, const std::string& title, const std::string& description, int color = 0x3498db);
         bool Send(const std::string& url, const std::string& json_payload);
+    }
+
+
+    // -- Dialog --------------------------------------------------------------
+    // Theme, title and colour overrides for the built-in windows, plus FatalError. The sign-in windows are
+    // License::Dialog and Account::Dialog.
+    // https://atlassecurity.site/docs?p=sdk/dialog
+
+    namespace Dialog {
+        enum class Theme { Dark, Light };
+
+        inline std::string AppDialogTitle = "";     // Heading of the dialog window. "" keeps the built-in one.
+        inline std::string AppName = "Atlas";       // Title bar text of every window.
+        inline Theme       theme = Theme::Dark;
+        inline HWND        parent = nullptr;        // nullptr = the foreground window.
+
+        // Colour overrides, 0xAARRGGBB (alpha ignored). A field left at 0 keeps the theme colour.
+        // Setting panel also derives raised, raisedHover and lineSoft.
+        //   Atlas::Dialog::accents.signal = 0xFFE04A2C;
+        struct Accents {
+            unsigned int signal     = 0;    // Primary button and focus rings.
+            unsigned int panel      = 0;    // Window surface.
+            unsigned int ink        = 0;    // Caption bar and dark backing.
+            unsigned int hi_text    = 0;    // Primary text.
+            unsigned int lo_text    = 0;    // Secondary text.
+            unsigned int faint_text = 0;    // Labels and hints.
+            unsigned int line       = 0;    // Hairline borders.
+            unsigned int alert      = 0;    // Errors and destructive actions.
+            unsigned int ok         = 0;    // Success and verified.
+        };
+        inline Accents accents{};
+
+        void FatalError(const std::string& title, const std::string& body, const std::string& error_code = "");
     }
 
 
