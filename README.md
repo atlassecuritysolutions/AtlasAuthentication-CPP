@@ -14,19 +14,6 @@ Most licensing checks run once, at sign-in, and trust the client after that. Atl
 
 This is the C++ SDK: a static library and one header. No DLL, no redistributables, no servers to run.
 
-## Six layers. One failed layer fails the whole sign-in.
-
-Every request runs the same stack in the same order, cheapest check first.
-
-| Layer | Beats | What it does |
-|---|---|---|
-| **Transport** | Interception, replay, floods | A fresh nonce and a keyed tag on every packet, keys derived per request from the machine and the build, and a proof-of-work gate before any license logic. |
-| **Identity** | Spoofing one component | Sixteen hardware sources, each kept on its own, so changing one never clears a ban on the rest. |
-| **Session** | Cheat Engine, boolean patching | The session id stays encrypted in memory. The auth token is split across four fragments that all have to be right at once. |
-| **Client integrity** | x64dbg, WinDbg, IDA, Frida | Debugger, hook, injection and hardware-breakpoint detection, import and code checks, threads hidden from debuggers. Runs for the life of the process, not only at login. |
-| **Server proof** | Nulled and cracked servers | Every approval is signed over the client's own nonce, the license and the session. The client exits on a missing signature, with no fallback and no retry. |
-| **Server rules** | Patched builds, abuse, sharing | Executable-hash whitelist, VPN and proxy checks, per-IP rate limits and session caps, served from a cache the dashboard invalidates the moment you change anything. |
-
 ## What you control
 
 - **Licenses or accounts.** Keys that lock to a machine, or usernames and passwords, per app.
@@ -60,7 +47,7 @@ int main() {
 }
 ```
 
-Free to start: three applications, 300 users per app, three file uploads per app and the full protection engine. No card. The Console and ImGui projects in this repo are already wired to the same two files.
+Free to start: three applications, 300 users per app, three file uploads per app and the full protection engine. No card. The Console project in this repo is already wired to the same two files.
 
 ## Everything else is in the docs
 
