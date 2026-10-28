@@ -4,7 +4,7 @@
 
 [atlassecurity.site](https://atlassecurity.site) · [Dashboard](https://atlassecurity.site/dashboard) · [Docs](https://atlassecurity.site/docs) · [Discord](https://discord.gg/EG5dmpFaCF) · [mail@atlassecurity.site](mailto:mail@atlassecurity.site)
 
-<p align="center"><a href="https://atlassecurity.site"><img src="https://atlassecurity.site/og-image.png" alt="Atlas. Sell software that can't be shared or read." width="100%"></a></p>
+<p align="center"><a href="https://atlassecurity.site"><img src="https://atlassecurity.site/og-image.png" alt="Atlas. Licensing and binary protection for Windows software." width="100%"></a></p>
 
 ## Sell software that can't be shared or read.
 
@@ -67,9 +67,9 @@ Every call, status code and edge case is documented, with examples in all three 
 - **Hash whitelist.** Drop your `.exe` into **Settings → Builds** in the dashboard. A modified copy is refused before its license is read. [More](https://atlassecurity.site/docs?p=concepts/hash-whitelist).
 - **Running-build proof (1.1.2 and later).** Each sign-in and heartbeat also proves the loaded code matches the file you uploaded. Set it to log or enforce per app, in the same place.
 - **Updates for your users.** Upload under **Versions**, promote, and older clients replace themselves on their next launch. [More](https://atlassecurity.site/docs?p=guides/auto-update).
-- **Updates for the SDK.** On a development machine the library keeps `Atlas Auth.lib` and `Atlas.h` current from signed releases and keeps your API key. Its state lives in `%LOCALAPPDATA%\AtlasAuth`.
+- **Updates for the SDK.** On a development machine the library keeps `Atlas Auth.lib` and `Atlas.h` current from signed releases and keeps your API key. Its state lives in `%USERPROFILE%\.atlassecurity`.
 
-When a process ends unexpectedly, the cause is already on disk: `%LOCALAPPDATA%\AtlasAuth\logs\atlas_exit_*.log` holds the reason, file and line. [Reading the log](https://atlassecurity.site/docs?p=diagnostics/logs).
+When a process ends unexpectedly, the cause is already on disk: `%USERPROFILE%\.atlassecurity\logs\atlas_exit_*.log` holds the reason, file and line. [Reading the log](https://atlassecurity.site/docs?p=diagnostics/logs).
 
 ## Atlas Obfuscator
 
@@ -85,8 +85,8 @@ The other half of Atlas protects the compiled file itself. Upload an `.exe` or `
 
 The header (`Atlas.h`) and the example code in this repository are released under the MIT License - see `LICENSE`. Everything below applies to `Atlas Auth.lib`, to Atlas services, and to Atlas internals.
 
-© 2025–2026 Atlas Security Solutions. All rights reserved.
-Sold by Atlas Security Solutions - Jeddah, Kingdom of Saudi Arabia.
+© 2025–2026 Atlas Security. All rights reserved.
+Sold by Atlas Security - Jeddah, Kingdom of Saudi Arabia.
 
 This SDK is licensed, not sold, for one purpose: integrating Atlas Authentication into your own software. That is the entire grant. Nothing here implies any broader right.
 

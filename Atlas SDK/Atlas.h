@@ -10,7 +10,7 @@
 namespace Atlas {
 
     // Your app's API key. Set it before Startup().
-    inline std::string API_KEY = "YOUR_API_KEY";
+    inline std::string API_KEY = "HtLDXw4aASNNOkJas0tBEtSpti2e4QEutjapqGkzdk7Bf1I0RMRwVBGJ6r2UnncU";
 
 
     // -- Session lifecycle ---------------------------------------------------
@@ -24,7 +24,7 @@ namespace Atlas {
     // Stops the library from opening any message box of its own: server notices, the wrong-API-key box and the
     // update notice. Call it before Startup(). The reason for a refusal stays in Data::GetErrorMessage().
     // The Dialog:: windows you call yourself still open.
-    void DisableMessageBoxes(bool disabled = true);
+    void DisableMessageBoxes();
 
 
     // -- License -------------------------------------------------------------
@@ -37,6 +37,7 @@ namespace Atlas {
         bool Login(const std::string& license_key);
         bool Login(const std::string& username, const std::string& password);
         bool Register(const std::string& license_key, const std::string& username, const std::string& password);
+        bool ResetWhileSignedIn();
 
         // Built-in windows. Each blocks until the user closes it.
         namespace Dialog {
@@ -54,16 +55,29 @@ namespace Atlas {
 
     namespace Account {
         struct LoginResult;     // Defined at the bottom of this file.
+        struct DeviceInfo;      // Defined at the bottom of this file.
 
         LoginResult Login(const std::string& username, const std::string& password);
-        bool Register(const std::string& username, const std::string& password, const std::string& email = "");
+        bool Register(const std::string& username, const std::string& password, const std::string& email = std::string());
         bool SubmitVerification(const std::string& eight_digit_code);
         bool ResendVerification();
         bool ConfirmEmail(const std::string& eight_digit_code);
         bool HasPendingEmailConfirm();
         bool Redeem(const std::string& license_key);
+        bool ResetWhileSignedIn();
         bool RequestPasswordReset(const std::string& identifier);
+        bool RequestResetCode(const std::string& identifier);
+        bool ConfirmReset(const std::string& identifier, const std::string& eight_digit_code);
         bool CompletePasswordReset(const std::string& eight_digit_code, const std::string& new_password);
+
+        // Email change and account deletion take the password and an 8-digit code sent by email.
+        bool RequestEmailChange(const std::string& password, const std::string& new_email);
+        bool ConfirmEmailChange(const std::string& eight_digit_code);
+        bool RequestAccountDeletion(const std::string& password);
+        bool ConfirmAccountDeletion(const std::string& eight_digit_code);
+        std::vector<DeviceInfo> ListDevices();
+        bool RevokeDevice(long long device_id);
+        int  SignOutOtherDevices();   // Returns how many other sessions were ended, or -1 on failure.
 
         // Built-in windows. Each blocks until the user closes it.
         namespace Dialog {
@@ -179,7 +193,7 @@ namespace Atlas {
     namespace Dialog {
         enum class Theme { Dark, Light };
 
-        inline std::string AppDialogTitle = "";     // Heading of the dialog window. "" keeps the built-in one.
+        inline std::string AppDialogTitle;          // Heading of the dialog window. "" keeps the built-in one.
         inline std::string AppName = "Atlas";       // Title bar text of every window.
         inline Theme       theme = Theme::Dark;
         inline HWND        parent = nullptr;        // nullptr = the foreground window.
@@ -200,7 +214,7 @@ namespace Atlas {
         };
         inline Accents accents{};
 
-        void FatalError(const std::string& title, const std::string& body, const std::string& error_code = "");
+        void FatalError(const std::string& title, const std::string& body, const std::string& error_code = std::string());
     }
 
 
@@ -228,6 +242,15 @@ namespace Atlas {
             std::string masked_email;       // e.g. "m...s@example.com" (NeedsVerification only).
             std::string sign_in_ip;         // Server-detected IP (NeedsVerification only).
             std::string sign_in_country;    // 2-letter ISO (NeedsVerification only).
+        };
+
+        // One device trusted for the signed-in account. Pass id to RevokeDevice.
+        struct DeviceInfo {
+            long long   id = 0;
+            long long   trusted_at = 0;     // Unix time the device was trusted.
+            long long   last_seen_at = 0;   // Unix time of its last sign-in.
+            std::string last_seen_ip;
+            bool        is_this_device = false;
         };
     }
 
