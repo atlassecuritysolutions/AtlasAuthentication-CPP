@@ -10,7 +10,7 @@
 namespace Atlas {
 
     // Your app's API key. Set it before Startup().
-    inline std::string API_KEY = "HtLDXw4aASNNOkJas0tBEtSpti2e4QEutjapqGkzdk7Bf1I0RMRwVBGJ6r2UnncU";
+    inline std::string API_KEY = "YOUR_API_KEY";
 
 
     // -- Session lifecycle ---------------------------------------------------
