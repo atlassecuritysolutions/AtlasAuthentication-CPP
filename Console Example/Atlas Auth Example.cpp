@@ -1,5 +1,6 @@
 // Atlas SDK - Console example (C++).
 // Build Release / x64. Set your API key in Atlas.h (Atlas::API_KEY = "...").
+// Updated 10/29/2026
 //
 //   Dashboard: https://atlassecurity.site/dashboard
 //   Docs:      https://atlassecurity.site/docs
@@ -157,27 +158,6 @@ int main()
                 std::cout << "[!] " << Atlas::Data::GetErrorMessage() << "\n";
         }
     }
-
-    // ================================================================
-    // OPTIONAL - password reset flow. Not run inline (would interrupt
-    // the session we just opened). Two calls, ready to lift:
-    //
-    //     Atlas::Account::RequestPasswordReset("username-or-email");
-    //     // ... user reads the 8-digit code from their email ...
-    //     Atlas::Account::CompletePasswordReset(code, new_password);
-    //
-    // Or, with the built-in UI:
-    //
-    //     Atlas::Account::Dialog::ResetPassword();
-    // ================================================================
-
-    // Download a file uploaded via the Atlas Panel
-    //auto fileData = Atlas::Network::Download(1);
-    //if (!fileData.empty()) {
-    //    std::ofstream file("downloaded_file.bin", std::ios::binary);
-    //    file.write(reinterpret_cast<const char*>(fileData.data()), fileData.size());
-    //    std::cout << "\nFile downloaded (" << fileData.size() << " bytes)\n";
-    //}
 
     std::cout << "\nPress Enter to exit program fully...\n";
     std::cin.get();
