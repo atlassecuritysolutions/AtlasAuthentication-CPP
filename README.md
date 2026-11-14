@@ -2,9 +2,9 @@
 
 ![Platform](https://img.shields.io/badge/platform-Windows%20x64-0078D6?logo=windows&logoColor=white) ![Language](https://img.shields.io/badge/language-C%2B%2B17-00599C?logo=cplusplus&logoColor=white) ![License](https://img.shields.io/badge/license-MIT%20source%20%C2%B7%20proprietary%20lib-lightgrey)
 
-[atlassecurity.site](https://atlassecurity.site) · [Dashboard](https://atlassecurity.site/dashboard) · [Docs](https://atlassecurity.site/docs) · [Discord](https://discord.gg/EG5dmpFaCF) · [mail@atlassecurity.site](mailto:mail@atlassecurity.site)
+[atlas.se.net](https://atlas.se.net) · [Dashboard](https://atlas.se.net/dashboard) · [Docs](https://atlas.se.net/docs) · [Discord](https://discord.gg/EG5dmpFaCF) · [mail@atlas.se.net](mailto:mail@atlas.se.net)
 
-<p align="center"><a href="https://atlassecurity.site"><img src="https://atlassecurity.site/og-image.png" alt="Atlas. Licensing and binary protection for Windows software." width="100%"></a></p>
+<p align="center"><a href="https://atlas.se.net"><img src="https://atlas.se.net/og-image.png" alt="Atlas. Licensing and binary protection for Windows software." width="100%"></a></p>
 
 ## Sell software that can't be shared or read.
 
@@ -27,7 +27,7 @@ This is the C++ SDK: a static library and one header. No DLL, no redistributable
 
 Requirements: Windows 10 or 11 x64, Visual Studio 2022 with **Desktop development with C++**, C++17 or newer.
 
-1. **Create an app.** Sign up at [atlassecurity.site](https://atlassecurity.site), create an application in the dashboard and copy its API key.
+1. **Create an app.** Sign up at [atlas.se.net](https://atlas.se.net), create an application in the dashboard and copy its API key.
 2. **Add the SDK.** Copy `Atlas SDK/Atlas.h` and `Atlas SDK/Atlas Auth.lib` into your project. For **Release | x64**, add their folder to the include and library directories and `Atlas Auth.lib;` to the linker's additional dependencies.
 3. **Sign in.**
 
@@ -55,31 +55,31 @@ Every call, status code and edge case is documented, with examples in all three 
 
 | You want | Read |
 |---|---|
-| The whole picture in one page | [Overview](https://atlassecurity.site/docs?p=sdk/overview) |
-| License keys | [License](https://atlassecurity.site/docs?p=sdk/license) |
-| Accounts, emailed codes, password reset | [Account](https://atlassecurity.site/docs?p=sdk/account) |
-| Session control, file downloads, bans | [Network](https://atlassecurity.site/docs?p=sdk/network) |
-| Dashboard values and entitlements | [Variables](https://atlassecurity.site/docs?p=sdk/variables) · [Entitlements](https://atlassecurity.site/docs?p=sdk/entitlements) |
-| Restyling the built-in windows | [Dialog](https://atlassecurity.site/docs?p=sdk/dialog) |
+| The whole picture in one page | [Overview](https://atlas.se.net/docs?p=sdk/overview) |
+| License keys | [License](https://atlas.se.net/docs?p=sdk/license) |
+| Accounts, emailed codes, password reset | [Account](https://atlas.se.net/docs?p=sdk/account) |
+| Session control, file downloads, bans | [Network](https://atlas.se.net/docs?p=sdk/network) |
+| Dashboard values and entitlements | [Variables](https://atlas.se.net/docs?p=sdk/variables) · [Entitlements](https://atlas.se.net/docs?p=sdk/entitlements) |
+| Restyling the built-in windows | [Dialog](https://atlas.se.net/docs?p=sdk/dialog) |
 
 ## Shipping
 
-- **Hash whitelist.** Drop your `.exe` into **Settings → Builds** in the dashboard. A modified copy is refused before its license is read. [More](https://atlassecurity.site/docs?p=concepts/hash-whitelist).
+- **Hash whitelist.** Drop your `.exe` into **Settings → Builds** in the dashboard. A modified copy is refused before its license is read. [More](https://atlas.se.net/docs?p=concepts/hash-whitelist).
 - **Running-build proof (1.1.2 and later).** Each sign-in and heartbeat also proves the loaded code matches the file you uploaded. Set it to log or enforce per app, in the same place.
-- **Updates for your users.** Upload under **Versions**, promote, and older clients replace themselves on their next launch. [More](https://atlassecurity.site/docs?p=guides/auto-update).
+- **Updates for your users.** Upload under **Versions**, promote, and older clients replace themselves on their next launch. [More](https://atlas.se.net/docs?p=guides/auto-update).
 - **Updates for the SDK.** On a development machine the library keeps `Atlas Auth.lib` and `Atlas.h` current from signed releases and keeps your API key. Its state lives in `%USERPROFILE%\.atlassecurity`.
 
-When a process ends unexpectedly, the cause is already on disk: `%USERPROFILE%\.atlassecurity\logs\atlas_exit_*.log` holds the reason, file and line. [Reading the log](https://atlassecurity.site/docs?p=diagnostics/logs).
+When a process ends unexpectedly, the cause is already on disk: `%USERPROFILE%\.atlassecurity\logs\atlas_exit_*.log` holds the reason, file and line. [Reading the log](https://atlas.se.net/docs?p=diagnostics/logs).
 
 ## Atlas Obfuscator
 
-The other half of Atlas protects the compiled file itself. Upload an `.exe` or `.dll` (x64 or x86), choose options and download the protected build. No source and no SDK. [See it work](https://atlassecurity.site/obfuscator), with real captures from protected builds.
+The other half of Atlas protects the compiled file itself. Upload an `.exe` or `.dll` (x64 or x86), choose options and download the protected build. No source and no SDK. [See it work](https://atlas.se.net/obfuscator), with real captures from protected builds.
 
 ## Support
 
-[Docs](https://atlassecurity.site/docs) · [Discord](https://discord.gg/EG5dmpFaCF) (fastest) · [mail@atlassecurity.site](mailto:mail@atlassecurity.site). For a bug report, include your Windows and Visual Studio versions, the failing call, and the **Dashboard → Logs** entry or the newest `atlas_exit_*.log`.
+[Docs](https://atlas.se.net/docs) · [Discord](https://discord.gg/EG5dmpFaCF) (fastest) · [mail@atlas.se.net](mailto:mail@atlas.se.net). For a bug report, include your Windows and Visual Studio versions, the failing call, and the **Dashboard → Logs** entry or the newest `atlas_exit_*.log`.
 
-<p align="center"><a href="https://atlassecurity.site"><img src="https://atlassecurity.site/closing-banner.png" alt="Start free. Upgrade when you reach a ceiling. Both products have a free tier with the full protection engine. No card to start." width="100%"></a></p>
+<p align="center"><a href="https://atlas.se.net"><img src="https://atlas.se.net/closing-banner.png" alt="Start free. Upgrade when you reach a ceiling. Both products have a free tier with the full protection engine. No card to start." width="100%"></a></p>
 
 ## License
 
@@ -104,4 +104,4 @@ Atlas monitors for unauthorized access and reverse-engineering activity as a mat
 
 All rights not expressly granted are reserved.
 
-Authorized inquiries only: [mail@atlassecurity.site](mailto:mail@atlassecurity.site) · [atlassecurity.site/legal](https://atlassecurity.site/legal)
+Authorized inquiries only: [mail@atlas.se.net](mailto:mail@atlas.se.net) · [atlas.se.net/legal](https://atlas.se.net/legal)

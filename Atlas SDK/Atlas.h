@@ -5,7 +5,7 @@
 #include <cstdint>
 
 // Atlas authentication library for Windows x64.
-// Reference: https://atlassecurity.site/docs
+// Reference: https://atlas.se.net/docs
 
 namespace Atlas {
 
@@ -15,7 +15,7 @@ namespace Atlas {
 
     // -- Session lifecycle ---------------------------------------------------
     // Startup() once, first. Logout() ends the session; the library stays loaded. Exit() kills the process, no cleanup.
-    // https://atlassecurity.site/docs?p=sdk/lifecycle
+    // https://atlas.se.net/docs?p=sdk/lifecycle
 
     void Startup();
     void Logout();
@@ -31,7 +31,7 @@ namespace Atlas {
     // Sign in with a license key. The first sign-in locks the key to this PC.
     // Login(username, password) and Register() are only for a license that carries its own username and password.
     // For real user accounts use Account.
-    // https://atlassecurity.site/docs?p=sdk/license
+    // https://atlas.se.net/docs?p=sdk/license
 
     namespace License {
         bool Login(const std::string& license_key);
@@ -51,7 +51,7 @@ namespace Atlas {
     // Username and password accounts, with optional email verification and password reset.
     // Login() returns a LoginResult: read result.status first. NeedsVerification means an 8-digit code was emailed,
     // so call SubmitVerification(code). Register() does not sign in.
-    // https://atlassecurity.site/docs?p=sdk/account
+    // https://atlas.se.net/docs?p=sdk/account
 
     namespace Account {
         struct LoginResult;     // Defined at the bottom of this file.
@@ -94,7 +94,7 @@ namespace Atlas {
     // -- Network -------------------------------------------------------------
     // Ask the server something during a session. The library already checks the session in the background,
     // so CheckAuthentication() is only for right before a sensitive action.
-    // https://atlassecurity.site/docs?p=sdk/network
+    // https://atlas.se.net/docs?p=sdk/network
 
     namespace Network {
         bool CheckAuthentication();
@@ -110,7 +110,7 @@ namespace Atlas {
     // Facts about the signed-in session. Valid only after a successful sign-in.
     // A getter with nothing to return gives "" or 0. GetDaysRemaining() is the exception: -1 means no expiry,
     // 0 means expired or under 24 hours left. GetExpiry() is "DD-MM-YYYY" or "Never".
-    // https://atlassecurity.site/docs?p=sdk/data
+    // https://atlas.se.net/docs?p=sdk/data
 
     namespace Data {
         // Identity
@@ -151,7 +151,7 @@ namespace Atlas {
     // -- Variables -----------------------------------------------------------
     // Values you set on the dashboard, read while the app runs. Change one without shipping a new build.
     // A key that does not exist gives "" (Fetch), 0 (FetchInt) or false (FetchBool).
-    // https://atlassecurity.site/docs?p=sdk/variables
+    // https://atlas.se.net/docs?p=sdk/variables
 
     namespace Variables {
         std::string Fetch(const std::string& key);
@@ -163,7 +163,7 @@ namespace Atlas {
     // -- Entitlements --------------------------------------------------------
     // What this license or account may do: the features and credits you create on the dashboard.
     // Has() and Remaining() are for showing and hiding. Only Consume() is enforced by the server.
-    // https://atlassecurity.site/docs?p=sdk/entitlements
+    // https://atlas.se.net/docs?p=sdk/entitlements
 
     namespace Entitlements {
         bool                     Has(const std::string& key);
@@ -176,7 +176,7 @@ namespace Atlas {
 
     // -- Webhook -------------------------------------------------------------
     // Send an HTTP POST from the client: Discord, Slack or your own endpoint. Unrelated to Atlas sign-in.
-    // https://atlassecurity.site/docs?p=sdk/webhook
+    // https://atlas.se.net/docs?p=sdk/webhook
 
     namespace Webhook {
         bool SendDiscord(const std::string& webhook_url, const std::string& message);
@@ -188,7 +188,7 @@ namespace Atlas {
     // -- Dialog --------------------------------------------------------------
     // Theme, title and colour overrides for the built-in windows, plus FatalError. The sign-in windows are
     // License::Dialog and Account::Dialog.
-    // https://atlassecurity.site/docs?p=sdk/dialog
+    // https://atlas.se.net/docs?p=sdk/dialog
 
     namespace Dialog {
         enum class Theme { Dark, Light };

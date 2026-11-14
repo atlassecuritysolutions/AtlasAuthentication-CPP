@@ -2,9 +2,9 @@
 // Build Release / x64. Set your API key in Atlas.h (Atlas::API_KEY = "...").
 // Updated 10/29/2026
 //
-//   Dashboard: https://atlassecurity.site/dashboard
-//   Docs:      https://atlassecurity.site/docs
-//   Legal:     https://atlassecurity.site/legal
+//   Dashboard: https://atlas.se.net/dashboard
+//   Docs:      https://atlas.se.net/docs
+//   Legal:     https://atlas.se.net/legal
 
 #include <Windows.h>
 #include <iostream>
